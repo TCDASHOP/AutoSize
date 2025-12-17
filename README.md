@@ -4,8 +4,7 @@
 - index.html
 - styles.css
 - app.js
-- logo.svg (replace with your logo if needed)
-
+<img src="./logo.png" alt="TCDA" class="logo">
 ## Deploy (GitHub Pages)
 1) Upload these files to your repo root
 2) Settings → Pages → Deploy from a branch → main / (root)
