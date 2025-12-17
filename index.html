@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>TCDA Size Guide</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Transcend Color Digital Apparel</div>
+    <div class="subtitle">Size Guide</div>
+  </header>
+
+  <main class="wrap">
+    <section class="controls">
+      <label class="field">
+        <span>商品</span>
+        <select id="productSelect"></select>
+      </label>
+
+      <div class="unitSwitch" role="group" aria-label="units">
+        <button id="btnCm" class="btn">cm</button>
+        <button id="btnInch" class="btn">inch</button>
+      </div>
+
+      <div class="actions">
+        <button id="btnCopy" class="btn ghost">表をコピー</button>
+        <a id="btnDownload" class="btn ghost" download>CSVダウンロード</a>
+      </div>
+    </section>
+
+    <section class="guide">
+      <div class="sectionTitle">採寸ガイド</div>
+      <img id="guideImg" alt="採寸ガイド図" />
+    </section>
+
+    <section class="tableArea">
+      <div class="sectionTitle">サイズ表</div>
+      <div id="tableWrap" class="tableWrap" aria-live="polite"></div>
+      <p class="note">※ 仕上がり寸法は測り方により ±1〜2cm（または±1/2〜1 inch）程度の誤差が出る場合があります。</p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    Transcend Color Digital Apparel
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
