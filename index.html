@@ -2,9 +2,9 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Transcend Color Digital Apparel | Size Guide</title>
-  <meta name="description" content="TCDA Size Guide. Select an item and switch JP/EN." />
+  <meta name="description" content="TCDA Size Guide" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -15,40 +15,55 @@
   </header>
 
   <main class="container">
-    <section class="controls" aria-label="サイズ表コントロール">
-      <div class="controls-row">
-        <label id="productLabel" class="control-label" for="productSelect">商品</label>
-        <select id="productSelect" class="control-select" aria-label="商品を選択">
-          <option id="productPlaceholder" value="" selected disabled>選択してください / Select an item</option>
-        </select>
-
-        <!-- ★ JP/EN 切替（JP=cm / EN=inch） -->
-        <div class="unit-toggle" role="group" aria-label="JP/EN">
-          <button id="jpBtn" type="button" class="unit-btn is-active" aria-pressed="true">JP</button>
-          <button id="enBtn" type="button" class="unit-btn" aria-pressed="false">EN</button>
-          <span id="unitBadge" style="margin-left:10px; opacity:.85;">cm</span>
+    <!-- Controls -->
+    <section class="panel" aria-label="Controls">
+      <div class="controls">
+        <div class="lang-toggle" role="tablist" aria-label="Language">
+          <button id="btnLangJP" class="tab" type="button" role="tab" aria-selected="true">JP</button>
+          <button id="btnLangEN" class="tab" type="button" role="tab" aria-selected="false">EN</button>
         </div>
+
+        <div class="control-row">
+          <label id="labelProduct" for="productSelect" class="label">商品</label>
+          <select id="productSelect" class="select" aria-label="Product"></select>
+
+          <div class="unit-badge" aria-label="Unit">
+            <span id="unitLabel">cm</span>
+          </div>
+        </div>
+
+        <p id="hintText" class="hint"></p>
       </div>
     </section>
 
-    <section class="guide">
+    <!-- Guide -->
+    <section class="panel">
       <h2 id="guideTitle" class="section-title">採寸ガイド</h2>
+
       <div class="guide-wrap">
-        <img id="guideImage" alt="採寸ガイド画像 / Measurement guide image" loading="lazy" />
+        <img id="guideImage" class="guide-image" src="" alt="" />
       </div>
-      <p id="imageNote" class="note">※ 画像は商品に応じて切り替わります / Image changes by product.</p>
+
+      <p id="imageNote" class="note"></p>
     </section>
 
-    <section class="table-section" aria-label="サイズ表">
+    <!-- Table -->
+    <section class="panel">
       <h2 id="tableTitle" class="section-title">サイズ表</h2>
-      <div id="tableContainer" class="table-container">
-        <div id="statusText" class="status">商品を選択してください / Please select an item.</div>
+
+      <div id="statusText" class="status" aria-live="polite"></div>
+
+      <div class="table-wrap">
+        <table id="sizeTable" class="size-table" aria-label="Size Table">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <small>© Transcend Color Digital Apparel <span id="year"></span></small>
+    <small id="footerText"></small>
   </footer>
 
   <script src="app.js" defer></script>
