@@ -1,4 +1,4 @@
-/* TCDA Size Guide — clarity-first UX (full rewrite) */
+/* TCDA Size Guide — full rewrite (robust + clarity-first UX) */
 
 const $ = (q) => document.querySelector(q);
 
@@ -8,808 +8,971 @@ const el = {
   btnCM: $("#btnCM"),
   btnIN: $("#btnIN"),
 
-  titleGuide: $("#titleGuide"),
-  subGuide: $("#subGuide"),
-  titleInput: $("#titleInput"),
-  hintInput: $("#hintInput"),
-  labelProduct: $("#labelProduct"),
-  titleNotes: $("#titleNotes"),
-  titleReco: $("#titleReco"),
-  titleTable: $("#titleTable"),
-  hintTable: $("#hintTable"),
-  imgNote: $("#imgNote"),
-
-  guideImage: $("#guideImage"),
-
-  productSelect: $("#productSelect"),
-  productBtn: $("#productBtn"),
-  productBtnText: $("#productBtnText"),
-  productPanel: $("#productPanel"),
-
-  inputArea: $("#inputArea"),
+  productDropdown: $("#productDropdown"),
+  inputsArea: $("#inputsArea"),
   btnCalc: $("#btnCalc"),
+
+  notesBox: $("#notesBox"),
+  resultBox: $("#resultBox"),
+  basisLine: $("#basisLine"),
+  actionRow: $("#actionRow"),
+  btnReview: $("#btnReview"),
+  btnGoTable: $("#btnGoTable"),
   noticeBox: $("#noticeBox"),
 
-  resultMain: $("#resultMain"),
-  resultBasis: $("#resultBasis"),
-  resultActions: $("#resultActions"),
+  guideImage: $("#guideImage"),
+  imgFallback: $("#imgFallback"),
 
   tableHead: $("#tableHead"),
   tableBody: $("#tableBody"),
   btnDownload: $("#btnDownload"),
-  tableWrap: $("#tableWrap"),
+  tableCard: $("#tableCard"),
+  tableFilter: $("#tableFilter"),
 
   footerCopy: $("#footerCopy"),
+
+  ui: {
+    guideTitle: $("#uiGuideTitle"),
+    guideSub: $("#uiGuideSub"),
+    guideLegend: $("#uiGuideLegend"),
+    calcTitle: $("#uiCalcTitle"),
+    calcSub: $("#uiCalcSub"),
+    productLabel: $("#uiProductLabel"),
+    notesTitle: $("#uiNotesTitle"),
+    recTitle: $("#uiRecTitle"),
+    tableTitle: $("#uiTableTitle"),
+    tableSub: $("#uiTableSub"),
+  }
 };
 
 const state = {
-  lang: "jp",   // "jp" | "en"
-  unit: "cm",   // "cm" | "inch"
+  lang: "jp",   // jp | en
+  unit: "cm",   // cm | inch
   productId: null,
-  table: null,  // { headers:[], rows:[{...}], rawRows:[[]] }
-  highlightedSize: null,
+  csvText: "",
+  headers: [],
+  rows: [],
+  keyToIndex: new Map(),
+  lastRecommendedSize: null,
+  dropdownOpen: false,
 };
+
+const EASE_CM = [
+  { v: 8,  jp: "標準（+8cm 目安）",  en: "Standard (+3.1 in)" },
+  { v: 10, jp: "ゆったり（+10cm 目安）", en: "Roomy (+3.9 in)" },
+  { v: 12, jp: "かなりゆったり（+12cm 目安）", en: "Very roomy (+4.7 in)" },
+];
+
+const ALLOW_CM = [
+  { v: 0.7,  jp: "+0.7cm（標準）", en: "+0.28 in (standard)" },
+  { v: 1.0,  jp: "+1.0cm（標準）", en: "+0.39 in (standard)" },
+  { v: 1.2,  jp: "+1.2cm（ゆったり）", en: "+0.47 in (roomy)" },
+];
 
 const PRODUCTS = [
   {
-    id: "mens_crew",
-    kind: "apparel",
-    guideImg: "assets/guide_tshirt.jpg",
-    csv: { cm: "data/aop_mens_crew_cm.csv", inch: "data/aop_mens_crew_inch.csv" },
-    label: {
-      jp: ["メンズ クルーネックT", ""],
-      en: ["Men’s Crew Neck", "T-Shirt"], // <- 2行
-    }
-  },
-  {
-    id: "womens_crew",
-    kind: "apparel",
-    guideImg: "assets/guide_tshirt.jpg",
-    csv: { cm: "data/aop_womens_crew_cm.csv", inch: "data/aop_womens_crew_inch.csv" },
-    label: {
-      jp: ["ウィメンズ クルーネックT", ""],
-      en: ["Women’s Crew Neck", "T-Shirt"],
-    }
-  },
-  {
-    id: "unisex_hoodie",
-    kind: "apparel",
-    guideImg: "assets/guide_hoodie.jpg",
-    csv: { cm: "data/aop_recycled_hoodie_cm.csv", inch: "data/aop_recycled_hoodie_inch.csv" },
-    label: {
-      jp: ["ユニセックス パーカー", ""],
-      en: ["Unisex", "Hoodie"],
-    }
-  },
-  {
-    id: "unisex_zip_hoodie",
-    kind: "apparel",
-    guideImg: "assets/guide_zip_hoodie.jpg",
-    csv: { cm: "data/aop_recycled_zip_hoodie_cm.csv", inch: "data/aop_recycled_zip_hoodie_inch.csv" },
-    label: {
-      jp: ["ユニセックス ジップパーカー", ""],
-      en: ["Unisex ZIP", "Hoodie"],
-    }
-  },
-  {
     id: "womens_slipon",
-    kind: "shoes",
-    guideImg: "assets/guide_slipon.jpg",
-    csv: { cm: "data/womens_slipon_cm.csv", inch: "data/womens_slipon_inch.csv" },
+    type: "shoes",
     label: {
-      jp: ["ウィメンズ スリッポン", ""],
-      en: ["Women’s Slip-On", "Canvas Shoes"],
+      jp: ["ウィメンズ", "スリッポン"],
+      en: ["Women's Slip-On", "Canvas Shoes"]
+    },
+    guideImg: "assets/guide_slipon.jpg",
+    csv: {
+      cm: "data/womens_slipon_cm.csv",
+      inch: "data/womens_slipon_inch.csv",
+    },
+    notes: {
+      jp: [
+        "主役は足長（左右を測り、長い方を採用）。",
+        "足長＋捨て寸（目安 7〜12mm）で選ぶ。",
+        "アウトソール長は外寸なので、足長と同一視しない。",
+      ],
+      en: [
+        "Use foot length (measure both feet; use the longer).",
+        "Choose by foot length + allowance (about 0.3–0.5 in).",
+        "Outsole length is outside length — don’t treat it as foot length.",
+      ]
     }
   },
   {
     id: "mens_slipon",
-    kind: "shoes",
-    guideImg: "assets/guide_slipon.jpg",
-    csv: { cm: "data/mens_slipon_cm.csv", inch: "data/mens_slipon_inch.csv" },
+    type: "shoes",
     label: {
-      jp: ["メンズ スリッポン", ""],
-      en: ["Men’s Slip-On", "Canvas Shoes"],
+      jp: ["メンズ", "スリッポン"],
+      en: ["Men's Slip-On", "Canvas Shoes"]
+    },
+    guideImg: "assets/guide_slipon.jpg",
+    csv: {
+      cm: "data/mens_slipon_cm.csv",
+      inch: "data/mens_slipon_inch.csv",
+    },
+    notes: {
+      jp: [
+        "主役は足長（左右を測り、長い方を採用）。",
+        "足長＋捨て寸（目安 7〜12mm）で選ぶ。",
+        "幅広の人は、迷ったら大きめ寄り。",
+      ],
+      en: [
+        "Use foot length (measure both feet; use the longer).",
+        "Choose by foot length + allowance (about 0.3–0.5 in).",
+        "If you have wider feet, size up when unsure.",
+      ]
+    }
+  },
+  {
+    id: "aop_womens_crew",
+    type: "tops",
+    label: {
+      jp: ["ウィメンズ", "クルーネックT"],
+      en: ["Women's Crew Neck", "T-Shirt"]
+    },
+    guideImg: "assets/guide_tshirt.jpg",
+    csv: {
+      cm: "data/aop_womens_crew_cm.csv",
+      inch: "data/aop_womens_crew_inch.csv",
+    },
+    notes: {
+      jp: [
+        "基本：ヌード胸囲 → 仕上がり胸囲（身幅×2）で照合。",
+        "動きやすさ重視なら「ゆったり」寄り。",
+        "身長は必須ではありません。心配なら「着丈」も確認。",
+      ],
+      en: [
+        "Basic: body chest → compare to garment chest (half chest ×2).",
+        "For easier movement, pick a roomier ease option.",
+        "Height is not required — check length if you care.",
+      ]
+    }
+  },
+  {
+    id: "aop_mens_crew",
+    type: "tops",
+    label: {
+      jp: ["メンズ", "クルーネックT"],
+      en: ["Men's Crew Neck", "T-Shirt"]
+    },
+    guideImg: "assets/guide_tshirt.jpg",
+    csv: {
+      cm: "data/aop_mens_crew_cm.csv",
+      inch: "data/aop_mens_crew_inch.csv",
+    },
+    notes: {
+      jp: [
+        "基本：ヌード胸囲 → 仕上がり胸囲（身幅×2）で照合。",
+        "迷ったら「標準」→動きやすさ重視は「ゆったり」。",
+      ],
+      en: [
+        "Basic: body chest → compare to garment chest (half chest ×2).",
+        "If unsure: Standard → choose Roomy for movement.",
+      ]
+    }
+  },
+  {
+    id: "aop_recycled_hoodie",
+    type: "tops",
+    label: {
+      jp: ["ユニセックス", "パーカー"],
+      en: ["Unisex Hoodie", "All-Over Print"]
+    },
+    guideImg: "assets/guide_hoodie.jpg",
+    csv: {
+      cm: "data/aop_recycled_hoodie_cm.csv",
+      inch: "data/aop_recycled_hoodie_inch.csv",
+    },
+    notes: {
+      jp: [
+        "基本はTシャツと同じ（胸囲 → 身幅×2）。",
+        "フーディは生地・リブで体感が変わるため、迷ったら大きめ寄り。",
+      ],
+      en: [
+        "Same logic as tees (body chest → half chest ×2).",
+        "Hoodies can feel tighter due to structure — size up if unsure.",
+      ]
+    }
+  },
+  {
+    id: "aop_recycled_zip_hoodie",
+    type: "tops",
+    label: {
+      jp: ["ユニセックス", "ジップパーカー"],
+      en: ["Unisex Zip Hoodie", "All-Over Print"]
+    },
+    guideImg: "assets/guide_zip_hoodie.jpg",
+    csv: {
+      cm: "data/aop_recycled_zip_hoodie_cm.csv",
+      inch: "data/aop_recycled_zip_hoodie_inch.csv",
+    },
+    notes: {
+      jp: [
+        "基本：胸囲 → 身幅×2（仕上がり胸囲）。",
+        "ジップは前開きの見え方が出るので、迷ったら“ゆったり”寄り。",
+      ],
+      en: [
+        "Basic: body chest → half chest ×2.",
+        "Zip hoodies show the front opening — go roomier if unsure.",
+      ]
     }
   },
 ];
 
-const i18n = {
+// ---------------- i18n strings ----------------
+const I18N = {
   jp: {
     guideTitle: "採寸ガイド",
     guideSub: "※画像は商品に応じて切り替わります",
-    inputTitle: "サイズ算出（任意入力）",
-    inputHint: "入力しなくてもサイズ表だけ見て選べます",
+    guideLegend: "A：身幅 / B：着丈 / C：袖丈",
+    calcTitle: "サイズ算出（任意入力）",
+    calcSub: "入力なしでもサイズ表だけ見て選べます",
     product: "商品",
     calc: "おすすめサイズを計算",
     notes: "選ぶときの注意事項",
-    reco: "おすすめ",
+    rec: "おすすめ",
     table: "サイズ表",
-    tableHint: "数値は平置き採寸です（誤差 ±1〜2）",
-    placeholderProduct: "商品を選択してください",
-    bodyChest: "ヌード胸囲（cm）",
-    ease: "ゆとり（目安）",
-    footLen: "足長（かかと〜一番長い指・cm）",
-    allowance: "捨て寸（目安）",
-    basisPrefix: "根拠：",
-    notFound: "該当するサイズが見当たりませんでした。",
-    fixBtn: "入力を見直す",
-    chooseTableBtn: "サイズ表で選ぶ",
-    noProduct: "まず商品を選択してください。",
-    noInput: "必要な数値を入力してください。",
-    apparelNotes: [
-      "最短で失敗を減らす：手持ちの“いちばん好きな服”を平置きで測り、近い数値を選ぶ。",
-      "体から逆算：ヌード胸囲＋ゆとり → 仕上がり胸囲 → 身幅（仕上がり胸囲÷2）。",
-      "優先順位：身幅 → 着丈 → 袖丈（袖は肩線位置で体感が変わる）。",
-      "フーディは裾リブ等で体感が変わるため、同じ数値でも印象が少し違うことがあります。"
-    ],
-    tshirtNotes: [
-      "Men’sはゆったり・直線的、Women’sはフィット寄りになりやすい。",
-      "最短で失敗を減らす：手持ちの“いちばん好きなTシャツ”の平置き寸法で照合。",
-      "優先順位：身幅 → 着丈 → 袖丈（袖は肩線位置で体感が変わる）。"
-    ],
-    shoesNotes: [
-      "主役は足長（左右を測り、長い方を採用）。",
-      "足長＋捨て寸（目安7〜12mm）で選ぶ。",
-      "アウトソール長は外寸なので、足長と同一視しない。",
-      "幅/甲：Men’sは幅広め、Women’sはタイト寄り。迷ったら大きめ寄り。"
-    ]
+    tableSub: "数値は平置き採寸です（誤差 ±1〜2）",
+    filterPh: "サイズ検索（例：M / 25）",
+    download: "Download CSV",
+    errNoProduct: "商品を選択してください。",
+    errNoInput: "入力がありません。サイズ表で選ぶか、数値を入力してください。",
+    errNoMatch: "該当するサイズが見当たりませんでした。",
+    btnReview: "入力を見直す",
+    btnGoTable: "サイズ表で選ぶ",
+    unitCM: "cm",
+    unitIN: "inch",
+    inBodyChest: "ヌード胸囲",
+    inFootLen: "足長（かかと〜一番長い指）",
+    inEase: "ゆとり（目安）",
+    inAllow: "捨て寸（目安）",
+    example: "例：",
   },
   en: {
     guideTitle: "Measuring Guide",
     guideSub: "Image changes by product.",
-    inputTitle: "Size recommendation (optional input)",
-    inputHint: "You can also choose from the size table without input.",
+    guideLegend: "A: Chest Width / B: Body Length / C: Sleeve Length",
+    calcTitle: "Size recommendation (optional input)",
+    calcSub: "You can also choose from the size table without input.",
     product: "Product",
     calc: "Calculate recommended size",
     notes: "Notes when choosing",
-    reco: "Recommended",
+    rec: "Recommended",
     table: "Size Table",
-    tableHint: "Values are flat measurements (±1–2).",
-    placeholderProduct: "Select a product",
-    bodyChest: "Body chest (in)",
-    ease: "Ease (guide)",
-    footLen: "Foot length (heel → longest toe, in)",
-    allowance: "Allowance (guide)",
-    basisPrefix: "Basis: ",
-    notFound: "No matching size was found.",
-    fixBtn: "Review input",
-    chooseTableBtn: "Choose from table",
-    noProduct: "Please select a product first.",
-    noInput: "Please enter the required value(s).",
-    apparelNotes: [
-      "Fastest way to reduce mistakes: measure your favorite garment flat and match close numbers.",
-      "Reverse-calc: body chest + ease → target garment chest → target half chest (÷2).",
-      "Priority: half chest → length → sleeve (sleeve feel changes with shoulder seam).",
-      "Hoodies can feel different even with the same numbers due to rib/structure."
-    ],
-    tshirtNotes: [
-      "Men’s tends to be roomier/straight; Women’s may feel more fitted.",
-      "Fastest way: compare with your favorite tee (flat measurements).",
-      "Priority: half chest → length → sleeve."
-    ],
-    shoesNotes: [
-      "Main metric is foot length (measure both feet; use the longer one).",
-      "Choose by foot length + allowance (about 0.3–0.5 in).",
-      "Outsole length is an outer measurement; do not treat it as foot length.",
-      "Width/instep: Men’s tends to be wider; Women’s can feel tighter. If unsure, go slightly bigger."
-    ]
+    tableSub: "Values are flat measurements (±1–2).",
+    filterPh: "Filter (e.g. M / 25)",
+    download: "Download CSV",
+    errNoProduct: "Please choose a product.",
+    errNoInput: "No input. Choose from the size table or enter your numbers.",
+    errNoMatch: "No matching size was found.",
+    btnReview: "Review input",
+    btnGoTable: "Choose from table",
+    unitCM: "cm",
+    unitIN: "inch",
+    inBodyChest: "Body chest",
+    inFootLen: "Foot length (heel to toe)",
+    inEase: "Ease (guide)",
+    inAllow: "Allowance (guide)",
+    example: "e.g.",
   }
 };
 
-// ---------- CSV ----------
+// ---------------- helpers ----------------
+function setActive(btn, on){
+  btn.classList.toggle("isActive", !!on);
+}
+function t(){ return I18N[state.lang]; }
+
+function toNumber(x){
+  if (x == null) return NaN;
+  const s = String(x).replace(/[^\d.\-]/g,"");
+  return parseFloat(s);
+}
+
+function keyify(s){
+  return String(s || "")
+    .replace(/\uFEFF/g,"")
+    .trim()
+    .toLowerCase()
+    .replace(/[’'"]/g,"")
+    .replace(/\s+/g,"")
+    .replace(/[\(\)\/\-\_]/g,"")
+    .replace(/：/g,":");
+}
+
+function showNotice(msg){
+  el.noticeBox.textContent = msg;
+  el.noticeBox.classList.remove("hidden");
+}
+function hideNotice(){
+  el.noticeBox.classList.add("hidden");
+  el.noticeBox.textContent = "";
+}
+
+function showActions(){
+  el.actionRow.classList.remove("hidden");
+  el.btnReview.textContent = t().btnReview;
+  el.btnGoTable.textContent = t().btnGoTable;
+}
+function hideActions(){
+  el.actionRow.classList.add("hidden");
+}
+
+function showBasis(text){
+  el.basisLine.textContent = text;
+  el.basisLine.classList.remove("hidden");
+}
+function hideBasis(){
+  el.basisLine.classList.add("hidden");
+  el.basisLine.textContent = "";
+}
+
+function setResult(text){
+  el.resultBox.textContent = text;
+}
+
+function scrollToTable(){
+  el.tableCard.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+// ---------------- CSV parser (simple but robust enough) ----------------
 function parseCSV(text){
-  // Simple CSV parser with quotes support
+  const lines = text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n").filter(l => l.trim().length > 0);
+  if (!lines.length) return { headers: [], rows: [] };
+
+  const parseLine = (line) => {
+    const out = [];
+    let cur = "";
+    let inQ = false;
+    for (let i=0;i<line.length;i++){
+      const ch = line[i];
+      if (ch === '"' ){
+        if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (ch === "," && !inQ){
+        out.push(cur);
+        cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    out.push(cur);
+    return out.map(s => s.trim());
+  };
+
+  const headers = parseLine(lines[0]);
   const rows = [];
-  let row = [];
-  let cur = "";
-  let inQuotes = false;
 
-  for(let i=0;i<text.length;i++){
-    const c = text[i];
-    const n = text[i+1];
+  for (let i=1;i<lines.length;i++){
+    const cols = parseLine(lines[i]);
+    if (cols.every(c => c === "")) continue;
 
-    if(c === '"' && inQuotes && n === '"'){
-      cur += '"'; i++; continue;
+    const obj = {};
+    for (let j=0;j<headers.length;j++){
+      obj[headers[j]] = cols[j] ?? "";
     }
-    if(c === '"'){
-      inQuotes = !inQuotes; continue;
-    }
-    if(c === "\r") continue;
-
-    if(c === "," && !inQuotes){
-      row.push(cur); cur=""; continue;
-    }
-    if(c === "\n" && !inQuotes){
-      row.push(cur); rows.push(row);
-      row = []; cur=""; continue;
-    }
-    cur += c;
+    rows.push(obj);
   }
-  row.push(cur);
-  rows.push(row);
-
-  // remove empty trailing rows
-  const cleaned = rows.filter(r => r.some(v => String(v).trim() !== ""));
-  return cleaned;
+  return { headers, rows };
 }
 
-function toNum(v){
-  if(v == null) return NaN;
-  const s = String(v).replace(/[^\d.\-]/g,"").trim();
-  if(!s) return NaN;
-  return Number(s);
+function buildKeyIndex(headers){
+  const m = new Map();
+  headers.forEach((h, idx) => {
+    m.set(keyify(h), idx);
+    m.set(h.trim(), idx);
+  });
+  return m;
 }
 
-function findHeader(headers, candidates){
-  const norm = (x)=>String(x).toLowerCase().replace(/\s+/g," ").trim();
-  const map = headers.map(h => norm(h));
-  for(const cand of candidates){
-    const idx = map.indexOf(norm(cand));
-    if(idx >= 0) return headers[idx];
+function findHeader(headers, keys){
+  const map = buildKeyIndex(headers);
+  for (const k of keys){
+    const kk = keyify(k);
+    if (map.has(kk)) return headers[map.get(kk)];
   }
-  // contains match
-  for(const cand of candidates){
-    const c = norm(cand);
-    for(let i=0;i<map.length;i++){
-      if(map[i].includes(c)) return headers[i];
-    }
+  // fallback: partial contains
+  const normalized = headers.map(h => ({ h, k: keyify(h) }));
+  for (const want of keys){
+    const w = keyify(want);
+    const hit = normalized.find(x => x.k.includes(w));
+    if (hit) return hit.h;
   }
   return null;
 }
 
-async function loadTable(product, unit){
-  const path = product.csv[unit];
-  const res = await fetch(path, { cache: "no-store" });
-  if(!res.ok) throw new Error(`CSV fetch failed: ${path}`);
-  const text = await res.text();
-  const grid = parseCSV(text);
+// ---------------- UI: custom dropdown (2-line) ----------------
+function renderDropdown(){
+  const current = PRODUCTS.find(p => p.id === state.productId) || PRODUCTS[0];
+  if (!state.productId) state.productId = current.id;
 
-  const headers = grid[0].map(h => String(h).trim());
-  const rows = grid.slice(1).map(r=>{
-    const obj = {};
-    headers.forEach((h,i)=> obj[h] = (r[i] ?? "").trim());
-    return obj;
-  });
+  const box = document.createElement("div");
 
-  return { headers, rows, path };
-}
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.id = "productButton";
+  btn.className = "ddBtn";
+  btn.setAttribute("aria-haspopup","listbox");
+  btn.setAttribute("aria-expanded", String(state.dropdownOpen));
 
-// ---------- UI ----------
-function setLang(lang){
-  state.lang = lang;
-  el.btnJP.classList.toggle("is-active", lang==="jp");
-  el.btnEN.classList.toggle("is-active", lang==="en");
+  const txt = document.createElement("div");
+  txt.className = "ddBtnText";
+  const main = document.createElement("div");
+  main.className = "ddMain";
+  const sub = document.createElement("div");
+  sub.className = "ddSub";
 
-  // language default unit (you can still switch manually)
-  if(lang === "jp") setUnit("cm", {silent:true});
-  if(lang === "en") setUnit("inch", {silent:true});
+  const lines = current.label[state.lang];
+  main.textContent = lines[0] || "";
+  sub.textContent = lines[1] || "";
 
-  renderTexts();
-  renderProductButtonText();
-  renderInputs();
-  renderNotes();
-  renderResultReset();
-  renderTable(); // re-render (head labels depend on CSV; keep)
-}
+  txt.appendChild(main);
+  if (sub.textContent) txt.appendChild(sub);
 
-function setUnit(unit, opts={silent:false}){
-  state.unit = unit;
-  el.btnCM.classList.toggle("is-active", unit==="cm");
-  el.btnIN.classList.toggle("is-active", unit==="inch");
-  if(!opts.silent){
-    refreshForProduct();
-  }
-}
+  const chev = document.createElement("div");
+  chev.className = "ddChevron";
+  chev.textContent = state.dropdownOpen ? "▲" : "▼";
 
-function productById(id){
-  return PRODUCTS.find(p => p.id === id) || null;
-}
+  btn.appendChild(txt);
+  btn.appendChild(chev);
 
-function renderTexts(){
-  const t = i18n[state.lang];
-  el.titleGuide.textContent = t.guideTitle;
-  el.subGuide.textContent = t.guideSub;
-  el.titleInput.textContent = t.inputTitle;
-  el.hintInput.textContent = t.inputHint;
-  el.labelProduct.textContent = t.product;
-  el.btnCalc.textContent = t.calc;
-  el.titleNotes.textContent = t.notes;
-  el.titleReco.textContent = t.reco;
-  el.titleTable.textContent = t.table;
-  el.hintTable.textContent = t.tableHint;
+  const panel = document.createElement("div");
+  panel.className = "ddPanel" + (state.dropdownOpen ? "" : " hidden");
+  panel.setAttribute("role","listbox");
 
-  // footer year (auto)
-  const y = new Date().getFullYear();
-  el.footerCopy.textContent = `© ${y} Transcend Color Digital Apparel`;
-}
-
-function openProductDropdown(open){
-  el.productSelect.classList.toggle("is-open", open);
-  el.productBtn.setAttribute("aria-expanded", open ? "true" : "false");
-}
-
-function buildProductDropdown(){
-  el.productPanel.innerHTML = "";
-  PRODUCTS.forEach(p=>{
-    const lines = p.label[state.lang];
+  PRODUCTS.forEach(p => {
     const opt = document.createElement("div");
-    opt.className = "opt";
+    opt.className = "ddOpt" + (p.id === state.productId ? " isActive" : "");
     opt.setAttribute("role","option");
-    opt.dataset.value = p.id;
+    opt.setAttribute("aria-selected", String(p.id === state.productId));
 
-    const t = document.createElement("div");
-    t.className = "opt__t";
+    const l = p.label[state.lang];
+    const oMain = document.createElement("div");
+    oMain.className = "oMain";
+    oMain.textContent = l[0] || "";
 
-    const l1 = document.createElement("div");
-    l1.textContent = lines[0] || "";
-    t.appendChild(l1);
+    const oSub = document.createElement("div");
+    oSub.className = "oSub";
+    oSub.textContent = l[1] || "";
 
-    if(lines[1]){
-      const l2 = document.createElement("div");
-      l2.className = "opt__l2";
-      l2.textContent = lines[1];
-      t.appendChild(l2);
-    }
+    opt.appendChild(oMain);
+    if (oSub.textContent) opt.appendChild(oSub);
 
-    opt.appendChild(t);
-
-    opt.addEventListener("click", ()=>{
-      setProduct(p.id);
-      openProductDropdown(false);
+    opt.addEventListener("click", async () => {
+      state.productId = p.id;
+      state.dropdownOpen = false;
+      renderDropdown();
+      await loadAndRender();
+      // 商品変更時は結果をリセット
+      setResult("—");
+      hideBasis();
+      hideActions();
+      hideNotice();
     });
 
-    el.productPanel.appendChild(opt);
+    panel.appendChild(opt);
   });
-  syncSelectedOption();
-}
 
-function syncSelectedOption(){
-  const opts = [...el.productPanel.querySelectorAll(".opt")];
-  opts.forEach(o=>{
-    o.classList.toggle("is-selected", o.dataset.value === state.productId);
+  btn.addEventListener("click", () => {
+    state.dropdownOpen = !state.dropdownOpen;
+    renderDropdown();
   });
+
+  // click outside to close
+  setTimeout(() => {
+    const handler = (ev) => {
+      if (!el.productDropdown.contains(ev.target)){
+        state.dropdownOpen = false;
+        renderDropdown();
+        document.removeEventListener("click", handler);
+      }
+    };
+    document.addEventListener("click", handler);
+  }, 0);
+
+  box.appendChild(btn);
+  box.appendChild(panel);
+
+  el.productDropdown.innerHTML = "";
+  el.productDropdown.appendChild(box);
 }
 
-function renderProductButtonText(){
-  const t = i18n[state.lang];
-  const p = productById(state.productId);
-  el.productBtnText.innerHTML = "";
-  if(!p){
-    el.productBtnText.textContent = t.placeholderProduct;
-    return;
-  }
-  const lines = p.label[state.lang];
-  const l1 = document.createElement("div");
-  l1.textContent = lines[0] || "";
-  el.productBtnText.appendChild(l1);
-  if(lines[1]){
-    const l2 = document.createElement("div");
-    l2.className = "line2";
-    l2.textContent = lines[1];
-    el.productBtnText.appendChild(l2);
-  }
-  syncSelectedOption();
+function applyI18n(){
+  const s = t();
+  el.ui.guideTitle.textContent = s.guideTitle;
+  el.ui.guideSub.textContent = s.guideSub;
+  el.ui.guideLegend.textContent = s.guideLegend;
+  el.ui.calcTitle.textContent = s.calcTitle;
+  el.ui.calcSub.textContent = s.calcSub;
+  el.ui.productLabel.textContent = s.product;
+  el.ui.notesTitle.textContent = s.notes;
+  el.ui.recTitle.textContent = s.rec;
+  el.ui.tableTitle.textContent = s.table;
+  el.ui.tableSub.textContent = s.tableSub;
+  el.tableFilter.placeholder = s.filterPh;
+  el.btnDownload.textContent = s.download;
+  el.btnCalc.textContent = s.calc;
+  el.btnReview.textContent = s.btnReview;
+  el.btnGoTable.textContent = s.btnGoTable;
 }
 
-function setGuideImage(src){
-  // cache-bust helps when Safari holds old image
-  el.guideImage.src = `${src}?v=${Date.now()}`;
-  // alt note is stable
+function setGuideImage(path){
+  el.guideImage.classList.remove("hidden");
+  el.imgFallback.classList.add("hidden");
+  el.guideImage.src = path;
+
+  el.guideImage.onerror = () => {
+    el.guideImage.classList.add("hidden");
+    el.imgFallback.classList.remove("hidden");
+  };
+}
+
+// ---------------- Inputs (dynamic) ----------------
+function renderInputs(){
+  const p = PRODUCTS.find(x => x.id === state.productId);
+  el.inputsArea.innerHTML = "";
+
+  if (!p) return;
+
+  if (p.type === "tops"){
+    const wrap = document.createElement("div");
+    wrap.className = "block";
+
+    // body chest
+    const f1 = document.createElement("div");
+    f1.className = "field";
+    const l1 = document.createElement("label");
+    l1.textContent = `${t().inBodyChest} (${state.unit})`;
+    const i1 = document.createElement("input");
+    i1.id = "inputBodyChest";
+    i1.type = "number";
+    i1.inputMode = "decimal";
+    i1.placeholder = state.lang === "jp" ? `${t().example} 88` : `${t().example} 34.6`;
+    i1.className = "filter";
+    i1.style.width = "100%";
+
+    f1.appendChild(l1);
+    f1.appendChild(i1);
+
+    // ease
+    const f2 = document.createElement("div");
+    f2.className = "field";
+    const l2 = document.createElement("label");
+    l2.textContent = t().inEase;
+    const sel = document.createElement("select");
+    sel.id = "inputEase";
+    sel.className = "filter";
+    sel.style.width = "100%";
+
+    EASE_CM.forEach((o) => {
+      const opt = document.createElement("option");
+      const v = (state.unit === "cm") ? o.v : +(o.v/2.54).toFixed(2);
+      opt.value = String(v);
+      opt.textContent = (state.lang === "jp") ? o.jp : o.en;
+      sel.appendChild(opt);
+    });
+
+    f2.appendChild(l2);
+    f2.appendChild(sel);
+
+    wrap.appendChild(f1);
+    wrap.appendChild(f2);
+
+    el.inputsArea.appendChild(wrap);
+  }
+
+  if (p.type === "shoes"){
+    const wrap = document.createElement("div");
+    wrap.className = "block";
+
+    // foot length
+    const f1 = document.createElement("div");
+    f1.className = "field";
+    const l1 = document.createElement("label");
+    l1.textContent = `${t().inFootLen} (${state.unit})`;
+    const i1 = document.createElement("input");
+    i1.id = "inputFootLen";
+    i1.type = "number";
+    i1.inputMode = "decimal";
+    i1.placeholder = state.lang === "jp" ? `${t().example} 23.5` : `${t().example} 9.25`;
+    i1.className = "filter";
+    i1.style.width = "100%";
+
+    f1.appendChild(l1);
+    f1.appendChild(i1);
+
+    // allowance
+    const f2 = document.createElement("div");
+    f2.className = "field";
+    const l2 = document.createElement("label");
+    l2.textContent = t().inAllow;
+    const sel = document.createElement("select");
+    sel.id = "inputAllow";
+    sel.className = "filter";
+    sel.style.width = "100%";
+
+    ALLOW_CM.forEach((o) => {
+      const opt = document.createElement("option");
+      const v = (state.unit === "cm") ? o.v : +(o.v/2.54).toFixed(2);
+      opt.value = String(v);
+      opt.textContent = (state.lang === "jp") ? o.jp : o.en;
+      sel.appendChild(opt);
+    });
+
+    f2.appendChild(l2);
+    f2.appendChild(sel);
+
+    wrap.appendChild(f1);
+    wrap.appendChild(f2);
+
+    el.inputsArea.appendChild(wrap);
+  }
+}
+
+// ---------------- Load CSV + render table ----------------
+async function fetchText(path){
+  const res = await fetch(path, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to load: ${path}`);
+  return await res.text();
 }
 
 function renderNotes(){
-  const t = i18n[state.lang];
-  const p = productById(state.productId);
-
-  let lines = [];
-  if(!p){
-    lines = [];
-  }else if(p.kind === "shoes"){
-    lines = t.shoesNotes;
-  }else{
-    // tee vs hoodie notes
-    if(p.id.includes("crew")) lines = t.tshirtNotes;
-    else lines = t.apparelNotes;
-  }
-
-  if(lines.length === 0){
-    el.noticeBox.textContent = "—";
-    return;
-  }
-
-  el.noticeBox.innerHTML = `<ul style="margin:0; padding-left:18px;">${
-    lines.map(s=>`<li>${escapeHTML(s)}</li>`).join("")
-  }</ul>`;
+  const p = PRODUCTS.find(x => x.id === state.productId);
+  if (!p) return;
+  const lines = p.notes[state.lang] || [];
+  el.notesBox.innerHTML = lines.map(x => `• ${x}`).join("<br>");
 }
 
-function renderInputs(){
-  const t = i18n[state.lang];
-  const p = productById(state.productId);
-  el.inputArea.innerHTML = "";
+function renderTable(headers, rows){
+  // head
+  el.tableHead.innerHTML = "";
+  const trh = document.createElement("tr");
+  headers.forEach(h => {
+    const th = document.createElement("th");
+    th.textContent = h;
+    trh.appendChild(th);
+  });
+  el.tableHead.appendChild(trh);
 
-  if(!p){
-    el.btnCalc.disabled = true;
-    return;
-  }
+  // body
+  el.tableBody.innerHTML = "";
+  rows.forEach((r) => {
+    const tr = document.createElement("tr");
+    const sizeVal = r.__sizeVal || "";
+    if (sizeVal) tr.dataset.size = String(sizeVal);
 
-  const wrap = document.createElement("div");
-  wrap.className = "inputRow";
-
-  if(p.kind === "apparel"){
-    // body chest
-    const chest = document.createElement("div");
-    chest.innerHTML = `
-      <label class="label">${t.bodyChest}</label>
-      <input id="inBodyChest" class="input" inputmode="decimal" placeholder="${state.lang==='jp'?'例: 88':'e.g. 34.6'}" />
-    `;
-    wrap.appendChild(chest);
-
-    // ease
-    const ease = document.createElement("div");
-    const easeSelect = document.createElement("select");
-    easeSelect.id = "selEase";
-    easeSelect.className = "select";
-
-    const easeCm = [8,10,12];
-    const easeIn = easeCm.map(v => +(v/2.54).toFixed(1)); // 3.1 / 3.9 / 4.7
-
-    const opts = state.unit === "cm" ? easeCm : easeIn;
-    const labels = opts.map(v=>{
-      if(state.lang==="jp"){
-        return `標準（+${v}${state.unit} 目安）`;
-      }
-      return `Standard (+${v} ${state.unit})`;
+    headers.forEach(h => {
+      const td = document.createElement("td");
+      td.textContent = (r[h] ?? "");
+      tr.appendChild(td);
     });
+    el.tableBody.appendChild(tr);
+  });
 
-    labels.forEach((lab,i)=>{
-      const o = document.createElement("option");
-      o.value = String(opts[i]);
-      o.textContent = lab;
-      easeSelect.appendChild(o);
-    });
-
-    ease.innerHTML = `<label class="label">${t.ease}</label>`;
-    ease.appendChild(easeSelect);
-    wrap.appendChild(ease);
-
-  }else{
-    // shoes
-    const foot = document.createElement("div");
-    foot.innerHTML = `
-      <label class="label">${t.footLen}</label>
-      <input id="inFootLen" class="input" inputmode="decimal" placeholder="${state.lang==='jp'?'例: 23.5':'e.g. 9.3'}" />
-    `;
-    wrap.appendChild(foot);
-
-    const allowance = document.createElement("div");
-    const sel = document.createElement("select");
-    sel.id = "selAllowance";
-    sel.className = "select";
-
-    // 7–12mm ≈ 0.7–1.2cm ≈ 0.3–0.5in
-    const allowCm = [0.7, 1.0, 1.2];
-    const allowIn = allowCm.map(v => +(v/2.54).toFixed(1)); // 0.3 / 0.4 / 0.5
-    const opts = state.unit === "cm" ? allowCm : allowIn;
-
-    opts.forEach((v,idx)=>{
-      const o = document.createElement("option");
-      o.value = String(v);
-      if(state.lang==="jp"){
-        const tag = idx===1 ? "（標準）" : "";
-        o.textContent = `+${v}${state.unit} ${tag}`.trim();
-      }else{
-        const tag = idx===1 ? " (standard)" : "";
-        o.textContent = `+${v} ${state.unit}${tag}`;
-      }
-      sel.appendChild(o);
-    });
-
-    allowance.innerHTML = `<label class="label">${t.allowance}</label>`;
-    allowance.appendChild(sel);
-    wrap.appendChild(allowance);
+  // re-apply highlight if exists
+  if (state.lastRecommendedSize){
+    highlightRow(state.lastRecommendedSize, false);
   }
-
-  el.inputArea.appendChild(wrap);
-  el.btnCalc.disabled = false;
 }
 
-function renderResultReset(){
-  el.resultMain.textContent = "—";
-  el.resultBasis.textContent = "";
-  el.resultActions.innerHTML = "";
-  clearHighlight();
+function filterTable(query){
+  const q = (query || "").trim().toLowerCase();
+  [...el.tableBody.querySelectorAll("tr")].forEach(tr => {
+    if (!q){ tr.classList.remove("hidden"); return; }
+    const txt = tr.textContent.toLowerCase();
+    tr.classList.toggle("hidden", !txt.includes(q));
+  });
 }
 
-function clearHighlight(){
-  state.highlightedSize = null;
-  [...el.tableBody.querySelectorAll("tr")].forEach(tr=>tr.classList.remove("hl"));
+function highlightRow(sizeVal, scroll = true){
+  const rows = [...el.tableBody.querySelectorAll("tr")];
+  rows.forEach(r => r.classList.remove("isHit"));
+
+  const hit = rows.find(r => String(r.dataset.size) === String(sizeVal));
+  if (hit){
+    hit.classList.add("isHit");
+    if (scroll){
+      // まずテーブルまでスクロール → 次に行へ
+      el.tableCard.scrollIntoView({ behavior:"smooth", block:"start" });
+      setTimeout(() => hit.scrollIntoView({ behavior:"smooth", block:"center" }), 240);
+    }
+  }
 }
 
-function setProduct(productId){
-  state.productId = productId;
-  renderProductButtonText();
-  renderNotes();
+async function loadAndRender(){
+  const p = PRODUCTS.find(x => x.id === state.productId) || PRODUCTS[0];
+  state.productId = p.id;
+
+  // guide image
+  setGuideImage(p.guideImg);
+
+  // inputs + notes
   renderInputs();
-  renderResultReset();
+  renderNotes();
 
-  const p = productById(productId);
-  if(p){
-    setGuideImage(p.guideImg);
-  }
-  refreshForProduct();
-}
-
-async function refreshForProduct(){
-  const p = productById(state.productId);
-  if(!p){
-    el.btnDownload.href = "#";
-    el.btnDownload.classList.add("is-disabled");
-    el.tableHead.innerHTML = "";
-    el.tableBody.innerHTML = "";
-    return;
-  }
+  // load csv
+  const csvPath = p.csv[state.unit];
+  state.csvText = "";
 
   try{
-    const table = await loadTable(p, state.unit);
-    state.table = table;
+    const text = await fetchText(csvPath);
+    state.csvText = text;
 
-    el.btnDownload.href = table.path;
-    el.btnDownload.download = table.path.split("/").pop();
+    const parsed = parseCSV(text);
+    state.headers = parsed.headers;
+    state.rows = parsed.rows;
 
-    renderTable();
-  }catch(e){
-    // if CSV fails, clear table but keep UI alive
-    state.table = null;
-    el.tableHead.innerHTML = "";
-    el.tableBody.innerHTML = "";
-    el.btnDownload.href = "#";
-    showError(i18n[state.lang].notFound);
+    // derive a "size" value for highlighting (best effort)
+    const sizeHeader = findHeader(state.headers, [
+      "size", "サイズ", "Size"
+    ]);
+    state.rows.forEach(r => r.__sizeVal = sizeHeader ? (r[sizeHeader] ?? "") : "");
+
+    renderTable(state.headers, state.rows);
+    hideNotice();
+  }catch(err){
+    // show graceful error, but keep UI alive
+    showNotice(`${err.message}`);
+    state.headers = [];
+    state.rows = [];
+    renderTable([], []);
   }
 }
 
-function renderTable(){
-  clearHighlight();
-  if(!state.table){
-    el.tableHead.innerHTML = "";
-    el.tableBody.innerHTML = "";
-    return;
-  }
-
-  const { headers, rows } = state.table;
-
-  el.tableHead.innerHTML = `
-    <tr>${headers.map(h=>`<th>${escapeHTML(h)}</th>`).join("")}</tr>
-  `;
-
-  el.tableBody.innerHTML = rows.map(r=>{
-    const sizeVal = r[findHeader(headers, ["Size","サイズ"]) || headers[0]] ?? "";
-    return `<tr data-size="${escapeHTML(String(sizeVal))}">
-      ${headers.map(h=>`<td>${escapeHTML(String(r[h] ?? ""))}</td>`).join("")}
-    </tr>`;
-  }).join("");
-}
-
-// ---------- Recommendation ----------
-function showError(msg){
-  const t = i18n[state.lang];
-  el.resultMain.textContent = msg;
-  el.resultBasis.textContent = "";
-  el.resultActions.innerHTML = `
-    <button class="btn" type="button" id="actFix">${t.fixBtn}</button>
-    <button class="btn" type="button" id="actTable">${t.chooseTableBtn}</button>
-  `;
-  $("#actFix").addEventListener("click", ()=>scrollToInputs(true));
-  $("#actTable").addEventListener("click", ()=>scrollToTable(true));
-}
-
-function showResult(sizeLabel, basisLine){
-  const t = i18n[state.lang];
-  el.resultMain.textContent = sizeLabel;
-  el.resultBasis.textContent = basisLine ? `${t.basisPrefix}${basisLine}` : "";
-  el.resultActions.innerHTML = `
-    <button class="btn" type="button" id="actFix">${t.fixBtn}</button>
-    <button class="btn" type="button" id="actTable">${t.chooseTableBtn}</button>
-  `;
-  $("#actFix").addEventListener("click", ()=>scrollToInputs(true));
-  $("#actTable").addEventListener("click", ()=>scrollToTable(true));
-}
-
-function scrollToInputs(smooth){
-  const top = el.inputArea.getBoundingClientRect().top + window.scrollY - 110;
-  window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
-  // focus first input
-  const first = el.inputArea.querySelector("input");
-  if(first) setTimeout(()=>first.focus(), 250);
-}
-
-function scrollToTable(smooth){
-  const top = el.tableWrap.getBoundingClientRect().top + window.scrollY - 110;
-  window.scrollTo({ top, behavior: smooth ? "smooth" : "auto" });
-}
-
-function highlightSizeRow(sizeValue){
-  clearHighlight();
-  if(!sizeValue) return;
-  const row = el.tableBody.querySelector(`tr[data-size="${CSS.escape(String(sizeValue))}"]`);
-  if(!row) return;
-  row.classList.add("hl");
-  state.highlightedSize = String(sizeValue);
-
-  // auto scroll to highlighted row (your request)
-  setTimeout(()=>{
-    row.scrollIntoView({ behavior:"smooth", block:"center" });
-  }, 120);
-}
-
+// ---------------- Recommendation logic ----------------
 function recommend(){
-  const t = i18n[state.lang];
-  const p = productById(state.productId);
-  if(!p){
-    showError(t.noProduct);
+  hideNotice();
+  hideBasis();
+  hideActions();
+
+  const p = PRODUCTS.find(x => x.id === state.productId);
+  if (!p){
+    showNotice(t().errNoProduct);
+    showActions();
     return;
   }
-  if(!state.table || !state.table.rows.length){
-    showError(t.notFound);
+
+  if (!state.rows.length || !state.headers.length){
+    showNotice("CSVが読み込めていません。data/ のファイル名とパスを確認してください。");
+    showActions();
     return;
   }
 
-  const { headers, rows } = state.table;
-  const sizeKey = findHeader(headers, ["Size","サイズ"]) || headers[0];
+  if (p.type === "tops"){
+    const vChest = toNumber($("#inputBodyChest")?.value);
+    const vEase = toNumber($("#inputEase")?.value);
 
-  if(p.kind === "apparel"){
-    const inChest = $("#inBodyChest");
-    const easeSel = $("#selEase");
-    const body = toNum(inChest?.value);
-    const ease = toNum(easeSel?.value);
-
-    if(!isFinite(body) || !isFinite(ease)){
-      showError(t.noInput);
+    if (!isFinite(vChest) || !isFinite(vEase)){
+      showNotice(t().errNoInput);
+      showActions();
       return;
     }
 
-    // target garment chest and half chest
-    const targetChest = body + ease;
-    const targetHalf = targetChest / 2;
+    // find chest column: half chest or full chest
+    const halfHeader = findHeader(state.headers, [
+      "身幅", "chest(flat)", "chestflat", "halfchest", "halfchestwidth", "1/2chest", "chestwidth"
+    ]);
+    const fullHeader = findHeader(state.headers, [
+      "胸囲", "chest", "garmentchest", "finishedchest", "chestcircumference"
+    ]);
+    const sizeHeader = findHeader(state.headers, ["size", "サイズ"]);
 
-    // find half-chest column
-    const halfKey =
-      findHeader(headers, [
-        "1/2 Chest Width",
-        "Half Chest Width",
-        "Chest (flat)",
-        "Chest flat",
-        "身幅",
-        "身幅（平置き）",
-        "身幅 (平置き)",
-        "身幅（平置き）　",
-        "Half chest",
-      ]);
+    const target = vChest + vEase;
 
-   
-    // if we can't find a usable column, we still show user-friendly notFound
-    if(!halfKey){
-      showError(t.notFound);
+    let best = null;
+    for (const r of state.rows){
+      const size = sizeHeader ? r[sizeHeader] : (r.__sizeVal || "");
+      let garmentChest = NaN;
+
+      if (halfHeader){
+        garmentChest = toNumber(r[halfHeader]) * 2;
+      } else if (fullHeader){
+        garmentChest = toNumber(r[fullHeader]);
+      }
+
+      if (!isFinite(garmentChest)) continue;
+      if (garmentChest >= target){
+        if (!best || garmentChest < best.garmentChest){
+          best = { size, garmentChest, target };
+        }
+      }
+    }
+
+    if (!best || !best.size){
+      showNotice(t().errNoMatch);
+      setResult("—");
+      showActions();
       return;
     }
 
-    // choose smallest size where half >= targetHalf
-    const candidates = rows
-      .map(r => ({ size: r[sizeKey], half: toNum(r[halfKey]), row: r }))
-      .filter(x => isFinite(x.half));
+    state.lastRecommendedSize = String(best.size);
+    setResult(String(best.size));
 
-    const sorted = candidates.slice().sort((a,b)=>a.half-b.half);
-    const pick = sorted.find(x => x.half >= targetHalf);
+    const unit = state.unit;
+    const chestTxt = `${vChest}${unit}`;
+    const easeTxt = `+${vEase}${unit}`;
+    const targetTxt = `${best.target.toFixed( (unit==="cm") ? 0 : 1 )}${unit}`;
+    const gTxt = `${best.garmentChest.toFixed( (unit==="cm") ? 0 : 1 )}${unit}`;
 
-    if(!pick){
-      showError(t.notFound);
+    const basis = (state.lang === "jp")
+      ? `根拠：胸囲 ${chestTxt} ${easeTxt} → 目標 ${targetTxt} ／ 仕上がり胸囲 ${gTxt} の「${best.size}」`
+      : `Basis: body chest ${chestTxt} ${easeTxt} → target ${targetTxt} / garment chest ${gTxt} → "${best.size}"`;
+
+    showBasis(basis);
+    showActions();
+
+    // highlight + scroll
+    highlightRow(best.size, true);
+    return;
+  }
+
+  if (p.type === "shoes"){
+    const vFoot = toNumber($("#inputFootLen")?.value);
+    const vAllow = toNumber($("#inputAllow")?.value);
+
+    if (!isFinite(vFoot) || !isFinite(vAllow)){
+      showNotice(t().errNoInput);
+      showActions();
       return;
     }
 
-    const basisLine = (state.lang==="jp")
-      ? `仕上がり胸囲=${fmt(body)}+${fmt(ease)}=${fmt(targetChest)} → 身幅目安=${fmt(targetHalf)}`
-      : `target garment chest = ${fmt(body)} + ${fmt(ease)} = ${fmt(targetChest)} → target half chest = ${fmt(targetHalf)}`;
+    const sizeHeader = findHeader(state.headers, ["size", "サイズ"]);
+    const footHeader = findHeader(state.headers, [
+      "足の長さ", "footlength", "foot length", "foot"
+    ]);
 
-    showResult(String(pick.size), basisLine);
-    highlightSizeRow(pick.size);
+    const target = vFoot + vAllow;
 
-  }else{
-    // shoes
-    const inFoot = $("#inFootLen");
-    const allowSel = $("#selAllowance");
-    const foot = toNum(inFoot?.value);
-    const allow = toNum(allowSel?.value);
+    let best = null;
+    for (const r of state.rows){
+      const size = sizeHeader ? r[sizeHeader] : (r.__sizeVal || "");
+      const fitFoot = footHeader ? toNumber(r[footHeader]) : NaN;
+      if (!isFinite(fitFoot)) continue;
 
-    if(!isFinite(foot) || !isFinite(allow)){
-      showError(t.noInput);
+      if (fitFoot >= target){
+        if (!best || fitFoot < best.fitFoot){
+          best = { size, fitFoot, target };
+        }
+      }
+    }
+
+    if (!best || !best.size){
+      showNotice(t().errNoMatch);
+      setResult("—");
+      showActions();
       return;
     }
 
-    const target = foot + allow;
+    state.lastRecommendedSize = String(best.size);
+    setResult(String(best.size));
 
-    const footKey =
-      findHeader(headers, [
-        "Foot length",
-        "Foot Length",
-        "Length",
-        "足の長さ",
-        "足長",
-        "足長さ",
-        "足長（cm）",
-        "足長 (cm)",
-      ]);
+    const unit = state.unit;
+    const footTxt = `${vFoot}${unit}`;
+    const alTxt = `+${vAllow}${unit}`;
+    const targetTxt = `${best.target.toFixed( (unit==="cm") ? 1 : 2 )}${unit}`;
+    const fitTxt = `${best.fitFoot.toFixed( (unit==="cm") ? 1 : 2 )}${unit}`;
 
-    if(!footKey){
-      showError(t.notFound);
-      return;
-    }
+    const basis = (state.lang === "jp")
+      ? `根拠：足長 ${footTxt} ${alTxt} → 目標 ${targetTxt} ／ 対応足長 ${fitTxt} の「${best.size}」`
+      : `Basis: foot ${footTxt} ${alTxt} → target ${targetTxt} / fits ${fitTxt} → "${best.size}"`;
 
-    const candidates = rows
-      .map(r => ({ size: r[sizeKey], foot: toNum(r[footKey]), row: r }))
-      .filter(x => isFinite(x.foot));
+    showBasis(basis);
+    showActions();
 
-    const sorted = candidates.slice().sort((a,b)=>a.foot-b.foot);
-    const pick = sorted.find(x => x.foot >= target);
-
-    if(!pick){
-      showError(t.notFound);
-      return;
-    }
-
-    const basisLine = (state.lang==="jp")
-      ? `足長目安=${fmt(foot)}+${fmt(allow)}=${fmt(target)} → 以上で最小のサイズ`
-      : `target foot length = ${fmt(foot)} + ${fmt(allow)} = ${fmt(target)} → smallest size that meets/exceeds target`;
-
-    showResult(String(pick.size), basisLine);
-    highlightSizeRow(pick.size);
+    // highlight + scroll
+    highlightRow(best.size, true);
+    return;
   }
 }
 
-function fmt(n){
-  if(!isFinite(n)) return "";
-  // keep 1 decimal for inch-like values, 1 decimal for cm shoe allowance too
-  const s = (Math.round(n*10)/10).toFixed(1);
-  // remove trailing .0 when looks nicer
-  return s.endsWith(".0") ? s.slice(0,-2) : s;
+// ---------------- download ----------------
+function downloadCSV(){
+  if (!state.csvText) return;
+  const p = PRODUCTS.find(x => x.id === state.productId);
+  const name = (p ? `${p.id}_${state.unit}.csv` : `size_${state.unit}.csv`);
+  const blob = new Blob([state.csvText], { type:"text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
-function escapeHTML(s){
-  return String(s)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+// ---------------- wiring ----------------
+function init(){
+  // footer year
+  const y = new Date().getFullYear();
+  el.footerCopy.textContent = `© ${y} Transcend Color Digital Apparel`;
+
+  // initial
+  state.productId = PRODUCTS[0].id;
+  applyI18n();
+  renderDropdown();
+
+  // toggles
+  el.btnJP.addEventListener("click", async () => {
+    state.lang = "jp";
+    setActive(el.btnJP, true);
+    setActive(el.btnEN, false);
+    applyI18n();
+    renderDropdown();
+    renderInputs();
+    renderNotes();
+  });
+
+  el.btnEN.addEventListener("click", async () => {
+    state.lang = "en";
+    setActive(el.btnJP, false);
+    setActive(el.btnEN, true);
+    applyI18n();
+    renderDropdown();
+    renderInputs();
+    renderNotes();
+  });
+
+  el.btnCM.addEventListener("click", async () => {
+    state.unit = "cm";
+    setActive(el.btnCM, true);
+    setActive(el.btnIN, false);
+    applyI18n();
+    await loadAndRender();
+  });
+
+  el.btnIN.addEventListener("click", async () => {
+    state.unit = "inch";
+    setActive(el.btnCM, false);
+    setActive(el.btnIN, true);
+    applyI18n();
+    await loadAndRender();
+  });
+
+  // calc
+  el.btnCalc.addEventListener("click", () => {
+    recommend();
+  });
+
+  // actions
+  el.btnReview.addEventListener("click", () => {
+    // focus first input if exists
+    const first = el.inputsArea.querySelector("input,select");
+    if (first) first.focus();
+  });
+
+  el.btnGoTable.addEventListener("click", () => {
+    scrollToTable();
+  });
+
+  // filter
+  el.tableFilter.addEventListener("input", (e) => {
+    filterTable(e.target.value);
+  });
+
+  // download
+  el.btnDownload.addEventListener("click", downloadCSV);
+
+  // initial load
+  loadAndRender();
 }
 
-// ---------- Events ----------
-el.btnJP.addEventListener("click", ()=>setLang("jp"));
-el.btnEN.addEventListener("click", ()=>setLang("en"));
-el.btnCM.addEventListener("click", ()=>setUnit("cm"));
-el.btnIN.addEventListener("click", ()=>setUnit("inch"));
-
-el.productBtn.addEventListener("click", (e)=>{
-  e.stopPropagation();
-  buildProductDropdown();
-  openProductDropdown(!el.productSelect.classList.contains("is-open"));
-});
-
-document.addEventListener("click", ()=>{
-  openProductDropdown(false);
-});
-
-el.btnCalc.addEventListener("click", ()=>{
-  recommend();
-});
-
-// ---------- Init ----------
-(function init(){
-  renderTexts();
-  buildProductDropdown();
-  renderProductButtonText();
-  renderInputs();
-  renderNotes();
-  renderResultReset();
-
-  // default product (optional): Men’s crew
-  setProduct("mens_crew");
-})();
+init();
