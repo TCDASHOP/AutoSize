@@ -2,135 +2,103 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Transcend Color Digital Apparel | Size Guide</title>
-
-  <meta name="description" content="TCDA Size Guide. Select an item and check the size table (JP/EN, cm/inch)." />
-  <link rel="canonical" href="https://sizeguide.tcda.shop/" />
-
-  <meta property="og:title" content="TCDA Size Guide" />
-  <meta property="og:description" content="Select an item and check the size table (JP/EN, cm/inch)." />
-  <meta property="og:type" content="website" />
-
-  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b0b0d" />
+  <title>TCDA Size Guide</title>
+  <meta name="description" content="TCDA Size Guide (JP: cm / EN: inch). CSV-based size tables with measurement guides." />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 
 <body>
-  <!-- Top Nav (TCDA-like) -->
-  <header class="site-header" role="banner">
-    <div class="wrap header-inner">
-      <a class="brand" href="https://www.tcda.shop/" target="_blank" rel="noopener noreferrer" aria-label="TCDA Home">
-        Transcend Color Digital Apparel
-      </a>
+  <header class="header">
+    <div class="container">
+      <div class="brand">
+        <div class="brand__title">Transcend Color Digital Apparel</div>
+        <div class="brand__subtitle">Size Guide</div>
+      </div>
 
-      <nav class="primary-nav" aria-label="Primary">
-        <a class="nav-link" href="https://www.tcda.shop/categories/6084bbf4da019c3e0cdab8f9" target="_blank" rel="noopener noreferrer">TOPS</a>
-        <a class="nav-link" href="https://www.tcda.shop/categories/66b0c8c54c3f2b002d1a3f7a" target="_blank" rel="noopener noreferrer">OUTER</a>
-        <a class="nav-link" href="https://www.tcda.shop/categories/66b0c8fd4c3f2b002d1a3f96" target="_blank" rel="noopener noreferrer">SHOES</a>
-        <a class="nav-link" href="https://www.tcda.shop/categories/66b0c94e4c3f2b002d1a3fa4" target="_blank" rel="noopener noreferrer">COLLECTION</a>
-      </nav>
-
-      <div class="header-actions">
-        <a class="pill" href="https://faq.tcda.shop/" target="_blank" rel="noopener noreferrer">FAQ</a>
-        <a class="pill" href="https://www.tcda.shop/" target="_blank" rel="noopener noreferrer" id="backToShop">Back to Shop</a>
-
-        <div class="segmented" role="tablist" aria-label="Language tabs">
-          <button class="seg-btn active" id="langJP" role="tab" aria-selected="true" type="button">JP</button>
-          <button class="seg-btn" id="langEN" role="tab" aria-selected="false" type="button">EN</button>
-        </div>
+      <div class="lang">
+        <button id="langJP" class="seg is-active" type="button" aria-pressed="true">JP</button>
+        <button id="langEN" class="seg" type="button" aria-pressed="false">EN</button>
       </div>
     </div>
   </header>
 
-  <!-- Hero -->
-  <section class="hero" aria-label="Hero">
-    <div class="wrap hero-inner">
-      <div class="hero-copy">
-        <p class="hero-eyebrow" id="subtitle">Size Guide</p>
-        <h1 class="hero-title" id="heroTitle">Wear art. Release your senses.</h1>
-        <p class="hero-lead" id="heroLead">Art you don’t hang. You wear.</p>
-      </div>
+  <main class="container">
+    <section class="hero">
+      <h1 class="hero__headline">Wear art. Release your senses.</h1>
+      <p class="hero__lead">Art you don’t hang. You wear.</p>
+    </section>
 
-      <div class="hero-tools">
-        <div class="segmented" role="tablist" aria-label="Unit tabs">
-          <button class="seg-btn active" id="unitCM" role="tab" aria-selected="true" type="button">cm</button>
-          <button class="seg-btn" id="unitIN" role="tab" aria-selected="false" type="button">inch</button>
-        </div>
-        <div class="badge" id="unitBadge" aria-label="Unit badge">Unit: cm</div>
-      </div>
-    </div>
-  </section>
-
-  <main class="wrap main">
-    <!-- Controls -->
     <section class="panel">
-      <div class="controls">
-        <div class="control">
-          <label class="label" for="productSelect" id="labelProduct">商品</label>
-          <select id="productSelect" class="select" aria-label="Product"></select>
+      <div class="panel__top">
+        <div class="field">
+          <label id="productLabel" class="label" for="productSelect">商品</label>
+          <select id="productSelect" class="select" aria-label="product"></select>
+        </div>
+
+        <div class="unitPill">
+          <span id="unitLabel" class="unitPill__label">単位</span>
+          <span id="unitValue" class="unitPill__value">cm</span>
         </div>
       </div>
 
-      <p class="hint" id="hintLine">
-        商品を選択すると、採寸ガイド・注意事項・サイズ表が切り替わります。
-      </p>
-    </section>
+      <div class="grid">
+        <section class="card">
+          <div class="card__head">
+            <h2 id="guideTitle" class="card__title">採寸ガイド</h2>
+          </div>
 
-    <!-- Guide Image -->
-    <section class="panel">
-      <div class="section-head">
-        <h2 class="section-title" id="titleGuide">採寸ガイド</h2>
-        <p class="section-note" id="noteGuide">※ 画像は商品に応じて切り替わります</p>
+          <div class="guide">
+            <div class="guide__imageWrap">
+              <img id="guideImage" class="guide__image" src="./assets/guide_tshirt.jpg" alt="Guide" loading="lazy" />
+            </div>
+            <div id="imgNote" class="note">
+              ※ 画像は商品に応じて切り替わります
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="tips">
+            <h3 id="tipsTitle" class="card__subtitle">選ぶときの注意事項</h3>
+            <ul id="tipsList" class="tips__list"></ul>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card__head">
+            <h2 id="calcTitle" class="card__title">サイズ目安（入力）</h2>
+          </div>
+
+          <div id="calcArea" class="calc"></div>
+
+          <div class="divider"></div>
+
+          <div class="result">
+            <div class="result__label" id="resultLabel">おすすめ</div>
+            <div class="result__value" id="resultValue">—</div>
+            <div class="result__meta" id="resultMeta"></div>
+          </div>
+        </section>
       </div>
 
-      <div class="guide-box">
-        <img id="guideImage" class="guide-image" src="" alt="Size guide image" loading="lazy" />
-      </div>
-    </section>
+      <section class="tableWrap">
+        <div class="tableHeader">
+          <h2 id="tableTitle" class="tableHeader__title">サイズ表</h2>
+        </div>
 
-    <!-- Finder -->
-    <section class="panel" id="finderPanel">
-      <div class="section-head">
-        <h2 class="section-title" id="titleFinder">サイズの選び方（入力）</h2>
-        <p class="section-note" id="noteFinder">
-          できるだけ失敗を減らすために、必要情報だけ入力してください。
-        </p>
-      </div>
-
-      <div id="finderArea" class="finder-area"></div>
-      <div id="finderResult" class="finder-result" aria-live="polite"></div>
-    </section>
-
-    <!-- Cautions -->
-    <section class="panel">
-      <div class="section-head">
-        <h2 class="section-title" id="titleCaution">選ぶときの注意事項</h2>
-        <p class="section-note" id="noteCaution">
-          選択中の商品の「必要な注意事項だけ」表示します。
-        </p>
-      </div>
-
-      <div id="cautionArea" class="caution-area"></div>
-    </section>
-
-    <!-- Table -->
-    <section class="panel">
-      <div class="section-head">
-        <h2 class="section-title" id="titleTable">サイズ表</h2>
-        <p class="section-note" id="tableStatus">Loading...</p>
-      </div>
-
-      <div class="table-wrap" id="tableWrap"></div>
+        <div id="tableArea" class="table"></div>
+      </section>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="wrap footer-inner">
-      <div id="footerText">© Transcend Color Digital Apparel</div>
-      <div class="muted" id="footerYear"></div>
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div>© <span id="year"></span> Transcend Color Digital Apparel</div>
     </div>
   </footer>
 
-  <script src="app.js"></script>
+  <script src="./app.js" defer></script>
 </body>
 </html>
