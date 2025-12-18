@@ -3,49 +3,111 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TCDA Size Guide</title>
-  <link rel="stylesheet" href="styles.css" />
+
+  <title>Transcend Color Digital Apparel | Size Guide</title>
+  <meta name="description" content="TCDA Size Guide (cm / inch). Download CSV and copy table easily." />
+  <meta name="theme-color" content="#000000" />
+
+  <link rel="stylesheet" href="./styles.css" />
 </head>
+
 <body>
-  <header class="topbar">
-    <div class="brand">Transcend Color Digital Apparel</div>
-    <div class="subtitle">Size Guide</div>
+  <a class="skip-link" href="#main">本文へスキップ</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <div class="brand">
+        <div class="brand__title">Transcend Color Digital Apparel</div>
+        <div class="brand__subtitle">Size Guide</div>
+      </div>
+    </div>
   </header>
 
-  <main class="wrap">
-    <section class="controls">
-      <label class="field">
-        <span>商品</span>
-        <select id="productSelect"></select>
-      </label>
+  <main id="main" class="container">
+    <noscript>
+      <div class="notice notice--warn">
+        このページはJavaScriptが必要です。ブラウザ設定でJavaScriptを有効にしてください。
+      </div>
+    </noscript>
 
-      <div class="unitSwitch" role="group" aria-label="units">
-        <button id="btnCm" class="btn">cm</button>
-        <button id="btnInch" class="btn">inch</button>
+    <!-- Controls -->
+    <section class="panel" aria-label="サイズ表の操作">
+      <div class="controls">
+        <div class="control-group">
+          <label class="control-label" for="productSelect">商品</label>
+          <select id="productSelect" class="select" aria-label="商品を選択">
+            <!-- app.js で options を生成する想定 -->
+            <option value="" selected disabled>読み込み中…</option>
+          </select>
+        </div>
+
+        <div class="control-group unit-toggle" role="group" aria-label="単位切替">
+          <button id="unitCmBtn" class="btn btn--seg" type="button" aria-pressed="true">cm</button>
+          <button id="unitInchBtn" class="btn btn--seg" type="button" aria-pressed="false">inch</button>
+        </div>
+
+        <div class="control-group actions" role="group" aria-label="アクション">
+          <button id="copyTableBtn" class="btn" type="button">表をコピー</button>
+          <button id="downloadCsvBtn" class="btn" type="button">CSVダウンロード</button>
+        </div>
       </div>
 
-      <div class="actions">
-        <button id="btnCopy" class="btn ghost">表をコピー</button>
-        <a id="btnDownload" class="btn ghost" download>CSVダウンロード</a>
+      <div class="hint">
+        <span class="hint__jp">※ 商品を選択 → cm / inch を切替 → 表をコピー or CSV保存</span>
+        <span class="hint__en">Select an item → switch cm / inch → Copy table or Download CSV.</span>
       </div>
     </section>
 
-    <section class="guide">
-      <div class="sectionTitle">採寸ガイド</div>
-      <img id="guideImg" alt="採寸ガイド図" />
+    <!-- Guide -->
+    <section class="panel" aria-label="採寸ガイド">
+      <div class="section-title">採寸ガイド</div>
+
+      <figure class="guide">
+        <div class="guide__frame">
+          <!-- app.js が src / alt を差し替える想定 -->
+          <img
+            id="guideImage"
+            class="guide__img"
+            src="./assets/guide_slipon.jpg"
+            alt="採寸ガイド画像"
+            loading="lazy"
+          />
+        </div>
+        <figcaption id="guideCaption" class="guide__caption">
+          ※ 画像は商品に応じて切り替わります / Image changes by product.
+        </figcaption>
+      </figure>
     </section>
 
-    <section class="tableArea">
-      <div class="sectionTitle">サイズ表</div>
-      <div id="tableWrap" class="tableWrap" aria-live="polite"></div>
-      <p class="note">※ 仕上がり寸法は測り方により ±1〜2cm（または±1/2〜1 inch）程度の誤差が出る場合があります。</p>
+    <!-- Table -->
+    <section class="panel" aria-label="サイズ表">
+      <div class="section-title">サイズ表</div>
+
+      <div class="table-wrap" role="region" aria-label="サイズ表テーブル" tabindex="0">
+        <table id="sizeTable" class="table">
+          <thead id="sizeTableHead">
+            <!-- app.js が生成 -->
+            <tr>
+              <th>Loading…</th>
+            </tr>
+          </thead>
+          <tbody id="sizeTableBody">
+            <!-- app.js が生成 -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="statusBar" class="status" aria-live="polite"></div>
     </section>
+
+    <footer class="site-footer">
+      <div class="site-footer__inner">
+        <div class="footer-text">Transcend Color Digital Apparel</div>
+      </div>
+    </footer>
   </main>
 
-  <footer class="footer">
-    Transcend Color Digital Apparel
-  </footer>
-
-  <script src="app.js"></script>
+  <!-- app.js はこの index.html の ID に合わせて動かす -->
+  <script src="./app.js" defer></script>
 </body>
 </html>
