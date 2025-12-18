@@ -2,130 +2,117 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="TCDA Size Guide — choose the best size with simple input and clear logic." />
-  <meta name="theme-color" content="#0b0f14" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
   <title>TCDA Size Guide</title>
-
-  <link rel="preload" href="styles.css" as="style" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="./styles.css?v=20251219" />
 </head>
 
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="brandTitle">Transcend Color Digital Apparel</div>
-      <div class="brandSub">Size Guide</div>
+      <a class="brandLink" href="https://www.tcda.shop/" aria-label="Back to Shop">
+        <img class="logo" src="./assets/logo.png" alt="TCDA" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <span class="logoFallback" style="display:none;">TCDA</span>
+      </a>
+
+      <div class="brandText">
+        <div class="brandName">Transcend Color Digital Apparel</div>
+        <div class="brandSub">Size Guide</div>
+      </div>
     </div>
 
-    <div class="toolbar">
-      <div class="seg" role="group" aria-label="Language">
-        <button id="btnJP" class="segBtn isActive" type="button">JP</button>
-        <button id="btnEN" class="segBtn" type="button">EN</button>
+    <div class="topbarRight">
+      <div class="toggles">
+        <div class="seg" role="group" aria-label="Language">
+          <button id="langJP" class="segBtn isOn" type="button">JP</button>
+          <button id="langEN" class="segBtn" type="button">EN</button>
+        </div>
+
+        <div class="seg" role="group" aria-label="Unit">
+          <button id="unitCM" class="segBtn isOn" type="button">cm</button>
+          <button id="unitIN" class="segBtn" type="button">inch</button>
+        </div>
       </div>
 
-      <div class="seg" role="group" aria-label="Unit">
-        <button id="btnCM" class="segBtn isActive" type="button">cm</button>
-        <button id="btnIN" class="segBtn" type="button">inch</button>
-      </div>
+      <a class="backBtn" href="https://www.tcda.shop/">ショップに戻る</a>
+      <div class="copyTop">© 2025 Transcend Color Digital Apparel</div>
     </div>
   </header>
 
   <main class="wrap">
     <section class="grid">
-      <!-- Left: measuring guide -->
-      <article class="card">
-        <div class="cardHead">
-          <h2 id="uiGuideTitle">採寸ガイド</h2>
-          <div id="uiGuideSub" class="muted">※画像は商品に応じて切り替わります</div>
-        </div>
+      <div class="card">
+        <h2 id="titleGuide">採寸ガイド</h2>
+        <p class="muted" id="guideNote">※画像は商品に応じて切り替わります</p>
 
         <div class="guideBox">
-          <img id="guideImage" class="guideImg" src="assets/guide_tshirt.jpg" alt="Measuring guide" />
-          <div id="imgFallback" class="imgFallback hidden">
-            画像が見つかりませんでした。assets フォルダのファイル名を確認してください。
+          <img id="guideImage" class="guideImage" src="./assets/guide_tshirt.jpg" alt="Measuring guide">
+        </div>
+
+        <div class="legend" id="legendText">A：身幅 / B：着丈 / C：袖丈</div>
+      </div>
+
+      <div class="card">
+        <h2 id="titleInput">サイズ算出（任意入力）</h2>
+        <p class="muted" id="inputNote">入力しなくてもサイズ表だけ見て選べます</p>
+
+        <!-- Custom Dropdown -->
+        <div class="field">
+          <label id="labelProduct" for="productBtn">商品</label>
+          <div class="dropdown" id="productDropdown">
+            <button id="productBtn" class="ddBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span id="productBtnText" class="ddBtnText">—</span>
+              <span class="ddChevron">▾</span>
+            </button>
+            <div id="productList" class="ddList" role="listbox" tabindex="-1" aria-label="Product list"></div>
           </div>
         </div>
 
-        <div id="uiGuideLegend" class="legend">
-          A：身幅 / B：着丈 / C：袖丈
-        </div>
-      </article>
+        <!-- Dynamic inputs -->
+        <div id="inputArea" class="inputArea"></div>
 
-      <!-- Right: controls -->
-      <article class="card">
-        <div class="cardHead">
-          <h2 id="uiCalcTitle">サイズ算出（任意入力）</h2>
-          <div id="uiCalcSub" class="muted">入力なしでもサイズ表だけ見て選べます</div>
+        <button id="calcBtn" class="primary" type="button">おすすめサイズを計算</button>
+
+        <div class="box">
+          <h3 id="titleNotes">選ぶときの注意事項</h3>
+          <div id="noticeBox" class="noticeBox"></div>
         </div>
 
-        <div class="form">
-          <!-- Custom dropdown (2-line capable) -->
-          <div class="field">
-            <label id="uiProductLabel" for="productButton">商品</label>
-            <div id="productDropdown" class="dropdown"></div>
+        <div class="box">
+          <h3 id="titleRec">おすすめ</h3>
+          <div id="resultBox" class="resultBox">—</div>
+          <div id="basisLine" class="basisLine"></div>
+
+          <div class="actionRow">
+            <button id="btnFix" class="ghost" type="button">入力を見直す</button>
+            <button id="btnTable" class="ghost" type="button">サイズ表で選ぶ</button>
           </div>
 
-          <!-- Dynamic inputs -->
-          <div id="inputsArea"></div>
-
-          <button id="btnCalc" class="primary" type="button">
-            おすすめサイズを計算
-          </button>
-
-          <!-- Notice -->
-          <div class="block">
-            <div id="uiNotesTitle" class="blockTitle">選ぶときの注意事項</div>
-            <div id="notesBox" class="blockBody muted"></div>
-          </div>
-
-          <!-- Result -->
-          <div class="block">
-            <div id="uiRecTitle" class="blockTitle">おすすめ</div>
-            <div id="resultBox" class="result">—</div>
-
-            <div id="basisLine" class="basis muted hidden"></div>
-
-            <div id="actionRow" class="actionRow hidden">
-              <button id="btnReview" class="ghost" type="button">入力を見直す</button>
-              <button id="btnGoTable" class="ghost" type="button">サイズ表で選ぶ</button>
-            </div>
-          </div>
-
-          <!-- Error / info -->
-          <div id="noticeBox" class="notice hidden"></div>
+          <div id="errorBox" class="errorBox" hidden></div>
         </div>
-      </article>
+      </div>
+    </section>
 
-      <!-- Table -->
-      <article class="card wide" id="tableCard">
-        <div class="cardHead row">
-          <div>
-            <h2 id="uiTableTitle">サイズ表</h2>
-            <div id="uiTableSub" class="muted">数値は平置き採寸です（誤差 ±1〜2）</div>
-          </div>
+    <section class="card tableCard" id="tableCard">
+      <div class="tableHead">
+        <h2 id="titleTable">サイズ表</h2>
+        <div class="muted small" id="tableNote">数値は平置き採寸です（誤差 ±1〜2）</div>
+      </div>
 
-          <div class="rowRight">
-            <input id="tableFilter" class="filter" type="text" placeholder="サイズ検索（例：M / 25）" />
-            <button id="btnDownload" class="ghost" type="button">Download CSV</button>
-          </div>
-        </div>
-
-        <div class="tableWrap">
-          <table class="table">
-            <thead id="tableHead"></thead>
-            <tbody id="tableBody"></tbody>
-          </table>
-        </div>
-      </article>
+      <div class="tableWrap">
+        <table class="table" id="sizeTable" aria-label="Size table">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
     </section>
 
     <footer class="footer">
-      <a class="footerLink" href="https://www.tcda.shop/" target="_blank" rel="noopener">Back to Shop</a>
-      <div class="footerCopy" id="footerCopy"></div>
+      <div>© 2025 Transcend Color Digital Apparel</div>
     </footer>
   </main>
 
-  <script src="app.js"></script>
+  <script src="./app.js?v=20251219"></script>
 </body>
 </html>
