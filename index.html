@@ -3,85 +3,124 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>Transcend Color Digital Apparel | Size Guide</title>
-  <meta name="description" content="TCDA Size Guide" />
+  <meta name="description" content="TCDA Size Guide. Select an item and check the size table with JP/EN and cm/inch." />
+
+  <!-- canonical (必要ならあなたの本番ドメインに合わせて変更) -->
+  <link rel="canonical" href="https://sizeguide.tcda.shop/" />
+
+  <meta property="og:title" content="TCDA Size Guide" />
+  <meta property="og:description" content="Select an item and check the size table (JP/EN, cm/inch)." />
+  <meta property="og:type" content="website" />
+
   <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
   <header class="site-header">
-    <h1 class="site-title">Transcend Color Digital Apparel</h1>
-    <p class="site-subtitle">Size Guide</p>
+    <div class="wrap">
+      <div class="title-row">
+        <div>
+          <h1 class="site-title">Transcend Color Digital Apparel</h1>
+          <p class="site-subtitle" id="subtitle">Size Guide</p>
+        </div>
+
+        <nav class="top-actions" aria-label="Top actions">
+          <a class="link-pill" href="https://www.tcda.shop/" target="_blank" rel="noopener noreferrer" id="backToShop">
+            Back to Shop
+          </a>
+
+          <div class="segmented" role="tablist" aria-label="Language tabs">
+            <button class="seg-btn" id="langJP" role="tab" aria-selected="true" type="button">JP</button>
+            <button class="seg-btn" id="langEN" role="tab" aria-selected="false" type="button">EN</button>
+          </div>
+        </nav>
+      </div>
+    </div>
   </header>
 
-  <main class="container">
+  <main class="wrap">
     <!-- Controls -->
-    <section class="panel" aria-label="Controls">
+    <section class="panel">
       <div class="controls">
-        <div class="lang-toggle" role="tablist" aria-label="Language">
-          <button id="btnLangJP" class="tab active" type="button" role="tab" aria-selected="true">JP</button>
-          <button id="btnLangEN" class="tab" type="button" role="tab" aria-selected="false">EN</button>
-        </div>
-
-        <div class="control-row">
-          <label id="labelProduct" for="productSelect" class="label">商品</label>
+        <div class="control-left">
+          <label class="label" for="productSelect" id="labelProduct">商品</label>
           <select id="productSelect" class="select" aria-label="Product"></select>
-
-          <div class="unit-badge" aria-label="Unit">
-            <span id="unitLabel">cm</span>
-          </div>
         </div>
 
-        <p id="hintText" class="hint"></p>
+        <div class="control-right">
+          <div class="segmented" role="tablist" aria-label="Unit tabs">
+            <button class="seg-btn" id="unitCM" role="tab" aria-selected="true" type="button">cm</button>
+            <button class="seg-btn" id="unitIN" role="tab" aria-selected="false" type="button">inch</button>
+          </div>
+
+          <div class="badge" id="unitBadge" aria-label="Unit badge">cm</div>
+        </div>
+      </div>
+
+      <p class="hint" id="hintLine">
+        商品を選択すると、採寸ガイド・注意事項・サイズ表が切り替わります。
+      </p>
+    </section>
+
+    <!-- Guide Image -->
+    <section class="panel">
+      <div class="section-head">
+        <h2 class="section-title" id="titleGuide">採寸ガイド</h2>
+        <p class="section-note" id="noteGuide">
+          ※ 画像は商品に応じて切り替わります
+        </p>
+      </div>
+
+      <div class="guide-box">
+        <img id="guideImage" class="guide-image" src="" alt="Size guide image" loading="lazy" />
       </div>
     </section>
 
     <!-- Size Finder -->
-    <section class="panel">
-      <h2 id="finderTitle" class="section-title">サイズ選びサポート</h2>
-
-      <div id="finderBody" class="finder-body">
-        <!-- app.jsで中身を生成 -->
+    <section class="panel" id="finderPanel">
+      <div class="section-head">
+        <h2 class="section-title" id="titleFinder">サイズの選び方（入力）</h2>
+        <p class="section-note" id="noteFinder">
+          できるだけ失敗を減らすために、必要情報だけ入力してください。
+        </p>
       </div>
 
+      <div id="finderArea" class="finder-area"></div>
       <div id="finderResult" class="finder-result" aria-live="polite"></div>
-
-      <div class="divider"></div>
-
-      <h3 id="cautionTitle" class="sub-title">選ぶときの注意事項</h3>
-      <div id="cautionBody" class="caution-body"></div>
     </section>
 
-    <!-- Guide -->
+    <!-- Cautions -->
     <section class="panel">
-      <h2 id="guideTitle" class="section-title">採寸ガイド</h2>
-
-      <div class="guide-wrap">
-        <img id="guideImage" class="guide-image" src="" alt="" />
+      <div class="section-head">
+        <h2 class="section-title" id="titleCaution">選ぶときの注意事項</h2>
+        <p class="section-note" id="noteCaution">
+          選択中の商品の「必要な注意事項だけ」表示します。
+        </p>
       </div>
 
-      <p id="imageNote" class="note"></p>
+      <div id="cautionArea" class="caution-area"></div>
     </section>
 
     <!-- Table -->
     <section class="panel">
-      <h2 id="tableTitle" class="section-title">サイズ表</h2>
-
-      <div id="statusText" class="status" aria-live="polite"></div>
-
-      <div class="table-wrap">
-        <table id="sizeTable" class="size-table" aria-label="Size Table">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
+      <div class="section-head">
+        <h2 class="section-title" id="titleTable">サイズ表</h2>
+        <p class="section-note" id="tableStatus">Loading...</p>
       </div>
+
+      <div class="table-wrap" id="tableWrap"></div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <small id="footerText"></small>
+    <div class="wrap footer-row">
+      <div id="footerText">© Transcend Color Digital Apparel</div>
+      <div class="muted" id="footerYear"></div>
+    </div>
   </footer>
 
-  <script src="app.js" defer></script>
+  <script src="app.js"></script>
 </body>
 </html>
