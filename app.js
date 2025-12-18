@@ -1,978 +1,768 @@
-/* TCDA Size Guide — full rewrite (robust + clarity-first UX) */
+/* TCDA Size Guide — device-consistent rewrite (custom dropdown + smart inputs + highlight row) */
 
 const $ = (q) => document.querySelector(q);
 
 const el = {
-  btnJP: $("#btnJP"),
-  btnEN: $("#btnEN"),
-  btnCM: $("#btnCM"),
-  btnIN: $("#btnIN"),
+  langJP: $("#langJP"),
+  langEN: $("#langEN"),
+  unitCM: $("#unitCM"),
+  unitIN: $("#unitIN"),
 
+  productBtn: $("#productBtn"),
+  productBtnText: $("#productBtnText"),
+  productList: $("#productList"),
   productDropdown: $("#productDropdown"),
-  inputsArea: $("#inputsArea"),
-  btnCalc: $("#btnCalc"),
-
-  notesBox: $("#notesBox"),
-  resultBox: $("#resultBox"),
-  basisLine: $("#basisLine"),
-  actionRow: $("#actionRow"),
-  btnReview: $("#btnReview"),
-  btnGoTable: $("#btnGoTable"),
-  noticeBox: $("#noticeBox"),
 
   guideImage: $("#guideImage"),
-  imgFallback: $("#imgFallback"),
+  legendText: $("#legendText"),
 
+  inputArea: $("#inputArea"),
+  calcBtn: $("#calcBtn"),
+  noticeBox: $("#noticeBox"),
+  resultBox: $("#resultBox"),
+  basisLine: $("#basisLine"),
+  errorBox: $("#errorBox"),
+
+  btnFix: $("#btnFix"),
+  btnTable: $("#btnTable"),
+
+  tableCard: $("#tableCard"),
   tableHead: $("#tableHead"),
   tableBody: $("#tableBody"),
-  btnDownload: $("#btnDownload"),
-  tableCard: $("#tableCard"),
-  tableFilter: $("#tableFilter"),
-
-  footerCopy: $("#footerCopy"),
-
-  ui: {
-    guideTitle: $("#uiGuideTitle"),
-    guideSub: $("#uiGuideSub"),
-    guideLegend: $("#uiGuideLegend"),
-    calcTitle: $("#uiCalcTitle"),
-    calcSub: $("#uiCalcSub"),
-    productLabel: $("#uiProductLabel"),
-    notesTitle: $("#uiNotesTitle"),
-    recTitle: $("#uiRecTitle"),
-    tableTitle: $("#uiTableTitle"),
-    tableSub: $("#uiTableSub"),
-  }
 };
 
 const state = {
-  lang: "jp",   // jp | en
-  unit: "cm",   // cm | inch
+  lang: "jp",
+  unit: "cm",
   productId: null,
-  csvText: "",
-  headers: [],
-  rows: [],
-  keyToIndex: new Map(),
-  lastRecommendedSize: null,
-  dropdownOpen: false,
+  tableRows: [],
+  lastHighlighted: null,
 };
 
-const EASE_CM = [
-  { v: 8,  jp: "標準（+8cm 目安）",  en: "Standard (+3.1 in)" },
-  { v: 10, jp: "ゆったり（+10cm 目安）", en: "Roomy (+3.9 in)" },
-  { v: 12, jp: "かなりゆったり（+12cm 目安）", en: "Very roomy (+4.7 in)" },
-];
-
-const ALLOW_CM = [
-  { v: 0.7,  jp: "+0.7cm（標準）", en: "+0.28 in (standard)" },
-  { v: 1.0,  jp: "+1.0cm（標準）", en: "+0.39 in (standard)" },
-  { v: 1.2,  jp: "+1.2cm（ゆったり）", en: "+0.47 in (roomy)" },
-];
-
+// 1) Products (file paths match your repo screenshots)
 const PRODUCTS = [
   {
     id: "womens_slipon",
     type: "shoes",
+    guideImg: "./assets/guide_slipon.jpg",
+    csv: { cm: "./data/womens_slipon_cm.csv", inch: "./data/womens_slipon_inch.csv" },
     label: {
-      jp: ["ウィメンズ", "スリッポン"],
-      en: ["Women's Slip-On", "Canvas Shoes"]
-    },
-    guideImg: "assets/guide_slipon.jpg",
-    csv: {
-      cm: "data/womens_slipon_cm.csv",
-      inch: "data/womens_slipon_inch.csv",
+      jp: { main: "ウィメンズ", sub: "スリッポン" },
+      en: { main: "Women’s", sub: "Slip-On Canvas Shoes" },
     },
     notes: {
       jp: [
         "主役は足長（左右を測り、長い方を採用）。",
         "足長＋捨て寸（目安 7〜12mm）で選ぶ。",
-        "アウトソール長は外寸なので、足長と同一視しない。",
+        "アウトソール長は外寸。足長と同一視しない。",
       ],
       en: [
-        "Use foot length (measure both feet; use the longer).",
-        "Choose by foot length + allowance (about 0.3–0.5 in).",
-        "Outsole length is outside length — don’t treat it as foot length.",
-      ]
-    }
+        "Use foot length (measure both; use the longer one).",
+        "Choose by foot length + toe room (about 7–12mm).",
+        "Outsole length is the outer length; do not treat it as foot length.",
+      ],
+    },
   },
   {
     id: "mens_slipon",
     type: "shoes",
+    guideImg: "./assets/guide_slipon.jpg",
+    csv: { cm: "./data/mens_slipon_cm.csv", inch: "./data/mens_slipon_inch.csv" },
     label: {
-      jp: ["メンズ", "スリッポン"],
-      en: ["Men's Slip-On", "Canvas Shoes"]
-    },
-    guideImg: "assets/guide_slipon.jpg",
-    csv: {
-      cm: "data/mens_slipon_cm.csv",
-      inch: "data/mens_slipon_inch.csv",
+      jp: { main: "メンズ", sub: "スリッポン" },
+      en: { main: "Men’s", sub: "Slip-On Canvas Shoes" },
     },
     notes: {
       jp: [
         "主役は足長（左右を測り、長い方を採用）。",
         "足長＋捨て寸（目安 7〜12mm）で選ぶ。",
-        "幅広の人は、迷ったら大きめ寄り。",
+        "アウトソール長は外寸。足長と同一視しない。",
       ],
       en: [
-        "Use foot length (measure both feet; use the longer).",
-        "Choose by foot length + allowance (about 0.3–0.5 in).",
-        "If you have wider feet, size up when unsure.",
-      ]
-    }
+        "Use foot length (measure both; use the longer one).",
+        "Choose by foot length + toe room (about 7–12mm).",
+        "Outsole length is the outer length; do not treat it as foot length.",
+      ],
+    },
   },
   {
     id: "aop_womens_crew",
     type: "tops",
+    guideImg: "./assets/guide_tshirt.jpg",
+    csv: { cm: "./data/aop_womens_crew_cm.csv", inch: "./data/aop_womens_crew_inch.csv" },
     label: {
-      jp: ["ウィメンズ", "クルーネックT"],
-      en: ["Women's Crew Neck", "T-Shirt"]
-    },
-    guideImg: "assets/guide_tshirt.jpg",
-    csv: {
-      cm: "data/aop_womens_crew_cm.csv",
-      inch: "data/aop_womens_crew_inch.csv",
+      jp: { main: "ウィメンズ", sub: "クルーネックT" },
+      en: { main: "Women’s Crew Neck", sub: "T-Shirt" },
     },
     notes: {
       jp: [
-        "基本：ヌード胸囲 → 仕上がり胸囲（身幅×2）で照合。",
-        "動きやすさ重視なら「ゆったり」寄り。",
-        "身長は必須ではありません。心配なら「着丈」も確認。",
+        "基本：ヌード胸囲 → 仕上がり胸囲（身幅×2）で比較。",
+        "迷ったら動きやすさ重視で 1 サイズ上も検討。",
       ],
       en: [
-        "Basic: body chest → compare to garment chest (half chest ×2).",
-        "For easier movement, pick a roomier ease option.",
-        "Height is not required — check length if you care.",
-      ]
-    }
+        "Basic: body chest → compare with garment chest (flat chest ×2).",
+        "If unsure, consider 1 size up for comfort/movement.",
+      ],
+    },
   },
   {
     id: "aop_mens_crew",
     type: "tops",
+    guideImg: "./assets/guide_tshirt.jpg",
+    csv: { cm: "./data/aop_mens_crew_cm.csv", inch: "./data/aop_mens_crew_inch.csv" },
     label: {
-      jp: ["メンズ", "クルーネックT"],
-      en: ["Men's Crew Neck", "T-Shirt"]
-    },
-    guideImg: "assets/guide_tshirt.jpg",
-    csv: {
-      cm: "data/aop_mens_crew_cm.csv",
-      inch: "data/aop_mens_crew_inch.csv",
+      jp: { main: "メンズ", sub: "クルーネックT" },
+      en: { main: "Men’s Crew Neck", sub: "T-Shirt" }, // ←2行表示OK
     },
     notes: {
       jp: [
-        "基本：ヌード胸囲 → 仕上がり胸囲（身幅×2）で照合。",
-        "迷ったら「標準」→動きやすさ重視は「ゆったり」。",
+        "基本：ヌード胸囲 → 仕上がり胸囲（身幅×2）で比較。",
+        "迷ったら動きやすさ重視で 1 サイズ上も検討。",
       ],
       en: [
-        "Basic: body chest → compare to garment chest (half chest ×2).",
-        "If unsure: Standard → choose Roomy for movement.",
-      ]
-    }
+        "Basic: body chest → compare with garment chest (flat chest ×2).",
+        "If unsure, consider 1 size up for comfort/movement.",
+      ],
+    },
   },
   {
     id: "aop_recycled_hoodie",
     type: "tops",
+    guideImg: "./assets/guide_hoodie.jpg",
+    csv: { cm: "./data/aop_recycled_hoodie_cm.csv", inch: "./data/aop_recycled_hoodie_inch.csv" },
     label: {
-      jp: ["ユニセックス", "パーカー"],
-      en: ["Unisex Hoodie", "All-Over Print"]
-    },
-    guideImg: "assets/guide_hoodie.jpg",
-    csv: {
-      cm: "data/aop_recycled_hoodie_cm.csv",
-      inch: "data/aop_recycled_hoodie_inch.csv",
+      jp: { main: "ユニセックス", sub: "パーカー" },
+      en: { main: "Unisex", sub: "Hoodie" },
     },
     notes: {
       jp: [
-        "基本はTシャツと同じ（胸囲 → 身幅×2）。",
-        "フーディは生地・リブで体感が変わるため、迷ったら大きめ寄り。",
+        "基本：Tシャツと同じ（胸囲→身幅→着丈→袖）。",
+        "フーディは生地/リブで体感が変わる。迷ったら少しゆとり。",
       ],
       en: [
-        "Same logic as tees (body chest → half chest ×2).",
-        "Hoodies can feel tighter due to structure — size up if unsure.",
-      ]
-    }
+        "Same logic as tees (chest → width → length → sleeve).",
+        "Hoodies can feel different due to fabric/rib; choose slightly roomier if unsure.",
+      ],
+    },
   },
   {
     id: "aop_recycled_zip_hoodie",
     type: "tops",
+    guideImg: "./assets/guide_zip_hoodie.jpg",
+    csv: { cm: "./data/aop_recycled_zip_hoodie_cm.csv", inch: "./data/aop_recycled_zip_hoodie_inch.csv" },
     label: {
-      jp: ["ユニセックス", "ジップパーカー"],
-      en: ["Unisex Zip Hoodie", "All-Over Print"]
-    },
-    guideImg: "assets/guide_zip_hoodie.jpg",
-    csv: {
-      cm: "data/aop_recycled_zip_hoodie_cm.csv",
-      inch: "data/aop_recycled_zip_hoodie_inch.csv",
+      jp: { main: "ユニセックス", sub: "ジップパーカー" },
+      en: { main: "Unisex Zip", sub: "Hoodie" },
     },
     notes: {
       jp: [
-        "基本：胸囲 → 身幅×2（仕上がり胸囲）。",
-        "ジップは前開きの見え方が出るので、迷ったら“ゆったり”寄り。",
+        "基本：Tシャツと同じ（胸囲→身幅→着丈→袖）。",
+        "ジップは前開き分、インナー厚で体感が変わる。迷ったら少しゆとり。",
       ],
       en: [
-        "Basic: body chest → half chest ×2.",
-        "Zip hoodies show the front opening — go roomier if unsure.",
-      ]
-    }
+        "Same logic as tees (chest → width → length → sleeve).",
+        "Zip hoodies may feel different with layers; choose slightly roomier if unsure.",
+      ],
+    },
   },
 ];
 
-// ---------------- i18n strings ----------------
+// 2) Labels
 const I18N = {
   jp: {
     guideTitle: "採寸ガイド",
-    guideSub: "※画像は商品に応じて切り替わります",
-    guideLegend: "A：身幅 / B：着丈 / C：袖丈",
-    calcTitle: "サイズ算出（任意入力）",
-    calcSub: "入力なしでもサイズ表だけ見て選べます",
+    guideNote: "※画像は商品に応じて切り替わります",
+    legendTops: "A：身幅 / B：着丈 / C：袖丈",
+    legendShoes: "足長 / アウトソールの長さ",
+    inputTitle: "サイズ算出（任意入力）",
+    inputNote: "入力しなくてもサイズ表だけ見て選べます",
     product: "商品",
     calc: "おすすめサイズを計算",
     notes: "選ぶときの注意事項",
     rec: "おすすめ",
     table: "サイズ表",
-    tableSub: "数値は平置き採寸です（誤差 ±1〜2）",
-    filterPh: "サイズ検索（例：M / 25）",
-    download: "Download CSV",
-    errNoProduct: "商品を選択してください。",
-    errNoInput: "入力がありません。サイズ表で選ぶか、数値を入力してください。",
-    errNoMatch: "該当するサイズが見当たりませんでした。",
-    btnReview: "入力を見直す",
-    btnGoTable: "サイズ表で選ぶ",
-    unitCM: "cm",
-    unitIN: "inch",
-    inBodyChest: "ヌード胸囲",
-    inFootLen: "足長（かかと〜一番長い指）",
-    inEase: "ゆとり（目安）",
-    inAllow: "捨て寸（目安）",
-    example: "例：",
+    tableNote: "数値は平置き採寸です（誤差 ±1〜2）",
+    errNeedInput: "入力がありません。サイズ表で選ぶか、数値を入力してください。",
+    btnFix: "入力を見直す",
+    btnTable: "サイズ表で選ぶ",
+
+    // inputs
+    bodyChest: "ヌード胸囲",
+    ease: "ゆとり（目安）",
+    footLength: "足長（かかと〜一番長い指）",
+    toeRoom: "捨て寸（目安）",
+    placeholderNumber: "例：88",
+
+    // ease options (cm/in)
+    easeStdCm: "標準（+8cm 目安）",
+    easeLooseCm: "ゆったり（+10cm 目安）",
+    easeMoreCm: "かなりゆったり（+12cm 目安）",
+    easeStdIn: "Standard (+3.1 in)",
+    easeLooseIn: "Loose (+3.9 in)",
+    easeMoreIn: "More loose (+4.7 in)",
+
+    toe07cm: "+0.7cm（標準）",
+    toe10cm: "+1.0cm（ゆったり）",
+    toe12cm: "+1.2cm（かなりゆったり）",
+    toe03in: "+0.3 in (standard)",
+    toe04in: "+0.4 in (loose)",
+    toe05in: "+0.5 in (more)",
+
+    // result phrases
+    recPrefix: "おすすめ：",
+    basisPrefix: "根拠：",
   },
   en: {
     guideTitle: "Measuring Guide",
-    guideSub: "Image changes by product.",
-    guideLegend: "A: Chest Width / B: Body Length / C: Sleeve Length",
-    calcTitle: "Size recommendation (optional input)",
-    calcSub: "You can also choose from the size table without input.",
+    guideNote: "Image changes by product.",
+    legendTops: "A: Half Chest Width / B: Body Length / C: Sleeve Length",
+    legendShoes: "Foot Length / Outsole Length",
+    inputTitle: "Size recommendation (optional input)",
+    inputNote: "You can also choose from the size table without input.",
     product: "Product",
     calc: "Calculate recommended size",
     notes: "Notes when choosing",
     rec: "Recommended",
     table: "Size Table",
-    tableSub: "Values are flat measurements (±1–2).",
-    filterPh: "Filter (e.g. M / 25)",
-    download: "Download CSV",
-    errNoProduct: "Please choose a product.",
-    errNoInput: "No input. Choose from the size table or enter your numbers.",
-    errNoMatch: "No matching size was found.",
-    btnReview: "Review input",
-    btnGoTable: "Choose from table",
-    unitCM: "cm",
-    unitIN: "inch",
-    inBodyChest: "Body chest",
-    inFootLen: "Foot length (heel to toe)",
-    inEase: "Ease (guide)",
-    inAllow: "Allowance (guide)",
-    example: "e.g.",
+    tableNote: "Values are flat measurements (±1–2).",
+    errNeedInput: "No input. Please enter a value, or choose from the size table.",
+    btnFix: "Review input",
+    btnTable: "Choose from table",
+
+    bodyChest: "Body chest",
+    ease: "Ease (guide)",
+    footLength: "Foot length (heel → longest toe)",
+    toeRoom: "Toe room (guide)",
+    placeholderNumber: "e.g. 34.6",
+
+    easeStdCm: "Standard (+8cm)",
+    easeLooseCm: "Loose (+10cm)",
+    easeMoreCm: "More (+12cm)",
+    easeStdIn: "Standard (+3.1 in)",
+    easeLooseIn: "Loose (+3.9 in)",
+    easeMoreIn: "More (+4.7 in)",
+
+    toe07cm: "+0.7cm (standard)",
+    toe10cm: "+1.0cm (loose)",
+    toe12cm: "+1.2cm (more)",
+    toe03in: "+0.3 in (standard)",
+    toe04in: "+0.4 in (loose)",
+    toe05in: "+0.5 in (more)",
+
+    recPrefix: "Recommended: ",
+    basisPrefix: "Basis: ",
   }
 };
 
-// ---------------- helpers ----------------
-function setActive(btn, on){
-  btn.classList.toggle("isActive", !!on);
-}
-function t(){ return I18N[state.lang]; }
-
-function toNumber(x){
-  if (x == null) return NaN;
-  const s = String(x).replace(/[^\d.\-]/g,"");
-  return parseFloat(s);
-}
-
-function keyify(s){
-  return String(s || "")
-    .replace(/\uFEFF/g,"")
-    .trim()
-    .toLowerCase()
-    .replace(/[’'"]/g,"")
-    .replace(/\s+/g,"")
-    .replace(/[\(\)\/\-\_]/g,"")
-    .replace(/：/g,":");
-}
-
-function showNotice(msg){
-  el.noticeBox.textContent = msg;
-  el.noticeBox.classList.remove("hidden");
-}
-function hideNotice(){
-  el.noticeBox.classList.add("hidden");
-  el.noticeBox.textContent = "";
-}
-
-function showActions(){
-  el.actionRow.classList.remove("hidden");
-  el.btnReview.textContent = t().btnReview;
-  el.btnGoTable.textContent = t().btnGoTable;
-}
-function hideActions(){
-  el.actionRow.classList.add("hidden");
-}
-
-function showBasis(text){
-  el.basisLine.textContent = text;
-  el.basisLine.classList.remove("hidden");
-}
-function hideBasis(){
-  el.basisLine.classList.add("hidden");
-  el.basisLine.textContent = "";
-}
-
-function setResult(text){
-  el.resultBox.textContent = text;
-}
-
-function scrollToTable(){
-  el.tableCard.scrollIntoView({ behavior:"smooth", block:"start" });
-}
-
-// ---------------- CSV parser (simple but robust enough) ----------------
-function parseCSV(text){
-  const lines = text.replace(/\r\n/g,"\n").replace(/\r/g,"\n").split("\n").filter(l => l.trim().length > 0);
-  if (!lines.length) return { headers: [], rows: [] };
-
-  const parseLine = (line) => {
-    const out = [];
-    let cur = "";
-    let inQ = false;
-    for (let i=0;i<line.length;i++){
-      const ch = line[i];
-      if (ch === '"' ){
-        if (inQ && line[i+1] === '"'){ cur += '"'; i++; }
-        else inQ = !inQ;
-      } else if (ch === "," && !inQ){
-        out.push(cur);
-        cur = "";
-      } else {
-        cur += ch;
-      }
+// 3) CSV utils
+function splitCSVLine(line) {
+  const out = [];
+  let cur = "";
+  let inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === "," && !inQ) {
+      out.push(cur.trim());
+      cur = "";
+    } else {
+      cur += ch;
     }
-    out.push(cur);
-    return out.map(s => s.trim());
-  };
+  }
+  out.push(cur.trim());
+  return out;
+}
 
-  const headers = parseLine(lines[0]);
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n").filter(l => l.trim().length);
+  if (!lines.length) return [];
+  const headers = splitCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, "").trim());
   const rows = [];
-
-  for (let i=1;i<lines.length;i++){
-    const cols = parseLine(lines[i]);
-    if (cols.every(c => c === "")) continue;
-
+  for (let i = 1; i < lines.length; i++) {
+    const cols = splitCSVLine(lines[i]).map(c => c.replace(/^"|"$/g, "").trim());
     const obj = {};
-    for (let j=0;j<headers.length;j++){
-      obj[headers[j]] = cols[j] ?? "";
-    }
+    headers.forEach((h, idx) => obj[h] = (cols[idx] ?? ""));
     rows.push(obj);
   }
-  return { headers, rows };
+  return rows;
 }
 
-function buildKeyIndex(headers){
-  const m = new Map();
-  headers.forEach((h, idx) => {
-    m.set(keyify(h), idx);
-    m.set(h.trim(), idx);
-  });
-  return m;
+function toNum(v) {
+  if (v === null || v === undefined) return NaN;
+  const s = String(v).replace(/[^\d.\-]/g, "");
+  const n = Number(s);
+  return Number.isFinite(n) ? n : NaN;
 }
 
-function findHeader(headers, keys){
-  const map = buildKeyIndex(headers);
-  for (const k of keys){
-    const kk = keyify(k);
-    if (map.has(kk)) return headers[map.get(kk)];
+// normalize columns across JP/EN headers
+function normalizeRows(raw) {
+  const norm = [];
+  for (const r of raw) {
+    const size =
+      r["Size"] ?? r["サイズ"] ?? r["size"] ?? r["SIZE"] ?? "";
+
+    // tops
+    const chestFlat =
+      toNum(r["Chest (flat)"] ?? r["Chest(flat)"] ?? r["身幅"] ?? r["身幅（平置き）"] ?? r["身幅(平置き)"]);
+
+    const length =
+      toNum(r["Length"] ?? r["Body Length"] ?? r["着丈"] ?? r["長さ"]);
+
+    const sleeve =
+      toNum(r["Sleeve length"] ?? r["Sleeve Length"] ?? r["袖丈"] ?? r["袖の長さ"]);
+
+    // shoes
+    const footLength =
+      toNum(r["Foot length"] ?? r["Foot Length"] ?? r["足の長さ"] ?? r["足長"] ?? r["足長さ"]);
+
+    const outsoleLength =
+      toNum(r["Outsole length"] ?? r["Outsole Length"] ?? r["アウトソールの長さ"] ?? r["アウトソール長"] ?? r["アウトソール長さ"]);
+
+    norm.push({
+      size: String(size).trim(),
+      chestFlat, length, sleeve,
+      footLength, outsoleLength,
+      _raw: r
+    });
   }
-  // fallback: partial contains
-  const normalized = headers.map(h => ({ h, k: keyify(h) }));
-  for (const want of keys){
-    const w = keyify(want);
-    const hit = normalized.find(x => x.k.includes(w));
-    if (hit) return hit.h;
-  }
-  return null;
+  // filter invalid size rows
+  return norm.filter(x => x.size && x.size !== "—");
 }
 
-// ---------------- UI: custom dropdown (2-line) ----------------
-function renderDropdown(){
-  const current = PRODUCTS.find(p => p.id === state.productId) || PRODUCTS[0];
-  if (!state.productId) state.productId = current.id;
+async function loadCSV(path) {
+  const res = await fetch(path + (path.includes("?") ? "" : `?v=${Date.now()}`), { cache: "no-store" });
+  if (!res.ok) throw new Error("CSV load failed: " + path);
+  const text = await res.text();
+  return normalizeRows(parseCSV(text));
+}
 
-  const box = document.createElement("div");
+// 4) UI helpers
+function setSeg(activeBtn, inactiveBtn) {
+  activeBtn.classList.add("isOn");
+  inactiveBtn.classList.remove("isOn");
+}
 
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.id = "productButton";
-  btn.className = "ddBtn";
-  btn.setAttribute("aria-haspopup","listbox");
-  btn.setAttribute("aria-expanded", String(state.dropdownOpen));
+function t() { return I18N[state.lang]; }
 
-  const txt = document.createElement("div");
-  txt.className = "ddBtnText";
-  const main = document.createElement("div");
-  main.className = "ddMain";
-  const sub = document.createElement("div");
-  sub.className = "ddSub";
+function closeDropdown() {
+  el.productList.classList.remove("isOpen");
+  el.productBtn.setAttribute("aria-expanded", "false");
+}
 
-  const lines = current.label[state.lang];
-  main.textContent = lines[0] || "";
-  sub.textContent = lines[1] || "";
+function openDropdown() {
+  el.productList.classList.add("isOpen");
+  el.productBtn.setAttribute("aria-expanded", "true");
+}
 
-  txt.appendChild(main);
-  if (sub.textContent) txt.appendChild(sub);
+function renderDropdown() {
+  el.productList.innerHTML = "";
+  for (const p of PRODUCTS) {
+    const item = document.createElement("div");
+    item.className = "ddItem" + (p.id === state.productId ? " isSel" : "");
+    item.setAttribute("role", "option");
+    item.dataset.id = p.id;
 
-  const chev = document.createElement("div");
-  chev.className = "ddChevron";
-  chev.textContent = state.dropdownOpen ? "▲" : "▼";
+    const main = document.createElement("div");
+    main.className = "ddMain";
+    main.textContent = p.label[state.lang].main;
 
-  btn.appendChild(txt);
-  btn.appendChild(chev);
+    const sub = document.createElement("div");
+    sub.className = "ddSub";
+    sub.textContent = p.label[state.lang].sub;
 
-  const panel = document.createElement("div");
-  panel.className = "ddPanel" + (state.dropdownOpen ? "" : " hidden");
-  panel.setAttribute("role","listbox");
+    item.appendChild(main);
+    item.appendChild(sub);
 
-  PRODUCTS.forEach(p => {
-    const opt = document.createElement("div");
-    opt.className = "ddOpt" + (p.id === state.productId ? " isActive" : "");
-    opt.setAttribute("role","option");
-    opt.setAttribute("aria-selected", String(p.id === state.productId));
-
-    const l = p.label[state.lang];
-    const oMain = document.createElement("div");
-    oMain.className = "oMain";
-    oMain.textContent = l[0] || "";
-
-    const oSub = document.createElement("div");
-    oSub.className = "oSub";
-    oSub.textContent = l[1] || "";
-
-    opt.appendChild(oMain);
-    if (oSub.textContent) opt.appendChild(oSub);
-
-    opt.addEventListener("click", async () => {
-      state.productId = p.id;
-      state.dropdownOpen = false;
-      renderDropdown();
-      await loadAndRender();
-      // 商品変更時は結果をリセット
-      setResult("—");
-      hideBasis();
-      hideActions();
-      hideNotice();
+    item.addEventListener("click", () => {
+      selectProduct(p.id);
+      closeDropdown();
     });
 
-    panel.appendChild(opt);
-  });
-
-  btn.addEventListener("click", () => {
-    state.dropdownOpen = !state.dropdownOpen;
-    renderDropdown();
-  });
-
-  // click outside to close
-  setTimeout(() => {
-    const handler = (ev) => {
-      if (!el.productDropdown.contains(ev.target)){
-        state.dropdownOpen = false;
-        renderDropdown();
-        document.removeEventListener("click", handler);
-      }
-    };
-    document.addEventListener("click", handler);
-  }, 0);
-
-  box.appendChild(btn);
-  box.appendChild(panel);
-
-  el.productDropdown.innerHTML = "";
-  el.productDropdown.appendChild(box);
+    el.productList.appendChild(item);
+  }
 }
 
-function applyI18n(){
-  const s = t();
-  el.ui.guideTitle.textContent = s.guideTitle;
-  el.ui.guideSub.textContent = s.guideSub;
-  el.ui.guideLegend.textContent = s.guideLegend;
-  el.ui.calcTitle.textContent = s.calcTitle;
-  el.ui.calcSub.textContent = s.calcSub;
-  el.ui.productLabel.textContent = s.product;
-  el.ui.notesTitle.textContent = s.notes;
-  el.ui.recTitle.textContent = s.rec;
-  el.ui.tableTitle.textContent = s.table;
-  el.ui.tableSub.textContent = s.tableSub;
-  el.tableFilter.placeholder = s.filterPh;
-  el.btnDownload.textContent = s.download;
-  el.btnCalc.textContent = s.calc;
-  el.btnReview.textContent = s.btnReview;
-  el.btnGoTable.textContent = s.btnGoTable;
+function currentProduct() {
+  return PRODUCTS.find(p => p.id === state.productId) || PRODUCTS[0];
 }
 
-function setGuideImage(path){
-  el.guideImage.classList.remove("hidden");
-  el.imgFallback.classList.add("hidden");
-  el.guideImage.src = path;
-
-  el.guideImage.onerror = () => {
-    el.guideImage.classList.add("hidden");
-    el.imgFallback.classList.remove("hidden");
-  };
+function setGuide(product) {
+  el.guideImage.src = product.guideImg;
+  el.legendText.textContent = product.type === "shoes" ? t().legendShoes : t().legendTops;
 }
 
-// ---------------- Inputs (dynamic) ----------------
-function renderInputs(){
-  const p = PRODUCTS.find(x => x.id === state.productId);
-  el.inputsArea.innerHTML = "";
+function clearResult() {
+  el.resultBox.textContent = "—";
+  el.basisLine.textContent = "";
+  el.errorBox.hidden = true;
+  el.errorBox.textContent = "";
+  if (state.lastHighlighted) {
+    state.lastHighlighted.classList.remove("trHilite");
+    state.lastHighlighted = null;
+  }
+}
 
-  if (!p) return;
+function scrollTo(elm) {
+  elm.scrollIntoView({ behavior: "smooth", block: "start" });
+}
 
-  if (p.type === "tops"){
-    const wrap = document.createElement("div");
-    wrap.className = "block";
+// 5) Inputs (show only required by product type)
+function renderInputs(product) {
+  el.inputArea.innerHTML = "";
 
-    // body chest
+  if (product.type === "tops") {
+    const row = document.createElement("div");
+    row.className = "row2";
+
     const f1 = document.createElement("div");
     f1.className = "field";
     const l1 = document.createElement("label");
-    l1.textContent = `${t().inBodyChest} (${state.unit})`;
+    l1.textContent = `${t().bodyChest} (${state.unit})`;
     const i1 = document.createElement("input");
-    i1.id = "inputBodyChest";
-    i1.type = "number";
+    i1.id = "inpChest";
+    i1.className = "input";
     i1.inputMode = "decimal";
-    i1.placeholder = state.lang === "jp" ? `${t().example} 88` : `${t().example} 34.6`;
-    i1.className = "filter";
-    i1.style.width = "100%";
+    i1.placeholder = t().placeholderNumber;
+    f1.appendChild(l1); f1.appendChild(i1);
 
-    f1.appendChild(l1);
-    f1.appendChild(i1);
-
-    // ease
     const f2 = document.createElement("div");
     f2.className = "field";
     const l2 = document.createElement("label");
-    l2.textContent = t().inEase;
-    const sel = document.createElement("select");
-    sel.id = "inputEase";
-    sel.className = "filter";
-    sel.style.width = "100%";
+    l2.textContent = t().ease;
+    const s2 = document.createElement("select");
+    s2.id = "selEase";
+    const opts = state.unit === "cm"
+      ? [
+          { v: "8",  label: t().easeStdCm },
+          { v: "10", label: t().easeLooseCm },
+          { v: "12", label: t().easeMoreCm },
+        ]
+      : [
+          { v: "3.1", label: t().easeStdIn },
+          { v: "3.9", label: t().easeLooseIn },
+          { v: "4.7", label: t().easeMoreIn },
+        ];
+    for (const o of opts) {
+      const op = document.createElement("option");
+      op.value = o.v;
+      op.textContent = o.label;
+      s2.appendChild(op);
+    }
+    f2.appendChild(l2); f2.appendChild(s2);
 
-    EASE_CM.forEach((o) => {
-      const opt = document.createElement("option");
-      const v = (state.unit === "cm") ? o.v : +(o.v/2.54).toFixed(2);
-      opt.value = String(v);
-      opt.textContent = (state.lang === "jp") ? o.jp : o.en;
-      sel.appendChild(opt);
-    });
+    row.appendChild(f1);
+    row.appendChild(f2);
+    el.inputArea.appendChild(row);
 
-    f2.appendChild(l2);
-    f2.appendChild(sel);
+  } else {
+    const row = document.createElement("div");
+    row.className = "row2";
 
-    wrap.appendChild(f1);
-    wrap.appendChild(f2);
-
-    el.inputsArea.appendChild(wrap);
-  }
-
-  if (p.type === "shoes"){
-    const wrap = document.createElement("div");
-    wrap.className = "block";
-
-    // foot length
     const f1 = document.createElement("div");
     f1.className = "field";
     const l1 = document.createElement("label");
-    l1.textContent = `${t().inFootLen} (${state.unit})`;
+    l1.textContent = `${t().footLength} (${state.unit})`;
     const i1 = document.createElement("input");
-    i1.id = "inputFootLen";
-    i1.type = "number";
+    i1.id = "inpFoot";
+    i1.className = "input";
     i1.inputMode = "decimal";
-    i1.placeholder = state.lang === "jp" ? `${t().example} 23.5` : `${t().example} 9.25`;
-    i1.className = "filter";
-    i1.style.width = "100%";
+    i1.placeholder = state.unit === "cm" ? "例：23.5" : "e.g. 9.25";
+    f1.appendChild(l1); f1.appendChild(i1);
 
-    f1.appendChild(l1);
-    f1.appendChild(i1);
-
-    // allowance
     const f2 = document.createElement("div");
     f2.className = "field";
     const l2 = document.createElement("label");
-    l2.textContent = t().inAllow;
-    const sel = document.createElement("select");
-    sel.id = "inputAllow";
-    sel.className = "filter";
-    sel.style.width = "100%";
+    l2.textContent = t().toeRoom;
+    const s2 = document.createElement("select");
+    s2.id = "selToe";
+    const opts = state.unit === "cm"
+      ? [
+          { v: "0.7", label: t().toe07cm },
+          { v: "1.0", label: t().toe10cm },
+          { v: "1.2", label: t().toe12cm },
+        ]
+      : [
+          { v: "0.3", label: t().toe03in },
+          { v: "0.4", label: t().toe04in },
+          { v: "0.5", label: t().toe05in },
+        ];
+    for (const o of opts) {
+      const op = document.createElement("option");
+      op.value = o.v;
+      op.textContent = o.label;
+      s2.appendChild(op);
+    }
+    f2.appendChild(l2); f2.appendChild(s2);
 
-    ALLOW_CM.forEach((o) => {
-      const opt = document.createElement("option");
-      const v = (state.unit === "cm") ? o.v : +(o.v/2.54).toFixed(2);
-      opt.value = String(v);
-      opt.textContent = (state.lang === "jp") ? o.jp : o.en;
-      sel.appendChild(opt);
-    });
-
-    f2.appendChild(l2);
-    f2.appendChild(sel);
-
-    wrap.appendChild(f1);
-    wrap.appendChild(f2);
-
-    el.inputsArea.appendChild(wrap);
+    row.appendChild(f1);
+    row.appendChild(f2);
+    el.inputArea.appendChild(row);
   }
 }
 
-// ---------------- Load CSV + render table ----------------
-async function fetchText(path){
-  const res = await fetch(path, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load: ${path}`);
-  return await res.text();
+// 6) Notes
+function renderNotes(product) {
+  const lines = product.notes[state.lang] || [];
+  const ul = document.createElement("ul");
+  for (const s of lines) {
+    const li = document.createElement("li");
+    li.textContent = s;
+    ul.appendChild(li);
+  }
+  el.noticeBox.innerHTML = "";
+  el.noticeBox.appendChild(ul);
 }
 
-function renderNotes(){
-  const p = PRODUCTS.find(x => x.id === state.productId);
-  if (!p) return;
-  const lines = p.notes[state.lang] || [];
-  el.notesBox.innerHTML = lines.map(x => `• ${x}`).join("<br>");
-}
+// 7) Table render
+function renderTable(product) {
+  const isShoes = product.type === "shoes";
 
-function renderTable(headers, rows){
-  // head
-  el.tableHead.innerHTML = "";
-  const trh = document.createElement("tr");
-  headers.forEach(h => {
+  const headCells = isShoes
+    ? (state.lang === "jp"
+        ? ["サイズ", "アウトソールの長さ", "足の長さ"]
+        : ["Size", "Outsole length", "Foot length"])
+    : (state.lang === "jp"
+        ? ["サイズ", "身幅", "丈", "袖丈"]
+        : ["Size", "Chest (flat)", "Length", "Sleeve length"]);
+
+  const tr = document.createElement("tr");
+  for (const h of headCells) {
     const th = document.createElement("th");
     th.textContent = h;
-    trh.appendChild(th);
-  });
-  el.tableHead.appendChild(trh);
+    tr.appendChild(th);
+  }
+  el.tableHead.innerHTML = "";
+  el.tableHead.appendChild(tr);
 
-  // body
   el.tableBody.innerHTML = "";
-  rows.forEach((r) => {
-    const tr = document.createElement("tr");
-    const sizeVal = r.__sizeVal || "";
-    if (sizeVal) tr.dataset.size = String(sizeVal);
 
-    headers.forEach(h => {
-      const td = document.createElement("td");
-      td.textContent = (r[h] ?? "");
-      tr.appendChild(td);
+  state.tableRows.forEach((r, idx) => {
+    const row = document.createElement("tr");
+    row.dataset.idx = String(idx);
+
+    const tdSize = document.createElement("td");
+    tdSize.textContent = r.size;
+
+    row.appendChild(tdSize);
+
+    if (isShoes) {
+      const tdOut = document.createElement("td");
+      tdOut.textContent = Number.isFinite(r.outsoleLength) ? String(r.outsoleLength) : "—";
+      const tdFoot = document.createElement("td");
+      tdFoot.textContent = Number.isFinite(r.footLength) ? String(r.footLength) : "—";
+      row.appendChild(tdOut);
+      row.appendChild(tdFoot);
+    } else {
+      const tdChest = document.createElement("td");
+      tdChest.textContent = Number.isFinite(r.chestFlat) ? String(r.chestFlat) : "—";
+      const tdLen = document.createElement("td");
+      tdLen.textContent = Number.isFinite(r.length) ? String(r.length) : "—";
+      const tdSlv = document.createElement("td");
+      tdSlv.textContent = Number.isFinite(r.sleeve) ? String(r.sleeve) : "—";
+      row.appendChild(tdChest);
+      row.appendChild(tdLen);
+      row.appendChild(tdSlv);
+    }
+
+    // click to select size (manual choice)
+    row.addEventListener("click", () => {
+      clearResult();
+      el.resultBox.textContent = `${t().recPrefix}${r.size}`;
+      el.basisLine.textContent = state.lang === "jp"
+        ? "根拠：サイズ表から選択"
+        : "Basis: chosen from size table";
+      highlightRow(row);
     });
-    el.tableBody.appendChild(tr);
-  });
 
-  // re-apply highlight if exists
-  if (state.lastRecommendedSize){
-    highlightRow(state.lastRecommendedSize, false);
-  }
-}
-
-function filterTable(query){
-  const q = (query || "").trim().toLowerCase();
-  [...el.tableBody.querySelectorAll("tr")].forEach(tr => {
-    if (!q){ tr.classList.remove("hidden"); return; }
-    const txt = tr.textContent.toLowerCase();
-    tr.classList.toggle("hidden", !txt.includes(q));
+    el.tableBody.appendChild(row);
   });
 }
 
-function highlightRow(sizeVal, scroll = true){
-  const rows = [...el.tableBody.querySelectorAll("tr")];
-  rows.forEach(r => r.classList.remove("isHit"));
-
-  const hit = rows.find(r => String(r.dataset.size) === String(sizeVal));
-  if (hit){
-    hit.classList.add("isHit");
-    if (scroll){
-      // まずテーブルまでスクロール → 次に行へ
-      el.tableCard.scrollIntoView({ behavior:"smooth", block:"start" });
-      setTimeout(() => hit.scrollIntoView({ behavior:"smooth", block:"center" }), 240);
-    }
-  }
+function highlightRow(tr) {
+  if (state.lastHighlighted) state.lastHighlighted.classList.remove("trHilite");
+  tr.classList.add("trHilite");
+  state.lastHighlighted = tr;
+  tr.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
-async function loadAndRender(){
-  const p = PRODUCTS.find(x => x.id === state.productId) || PRODUCTS[0];
-  state.productId = p.id;
+// 8) Recommendation logic
+function recommendForTops() {
+  const chest = toNum($("#inpChest")?.value);
+  const ease = toNum($("#selEase")?.value);
 
-  // guide image
-  setGuideImage(p.guideImg);
+  if (!Number.isFinite(chest)) return { ok:false, err: t().errNeedInput };
 
-  // inputs + notes
-  renderInputs();
-  renderNotes();
+  // target garment chest (finished) = body chest + ease
+  const target = chest + (Number.isFinite(ease) ? ease : 0);
 
-  // load csv
-  const csvPath = p.csv[state.unit];
-  state.csvText = "";
+  // find smallest size where chestFlat*2 >= target
+  const candidates = state.tableRows
+    .map((r, idx) => ({ r, idx, garmentChest: r.chestFlat * 2 }))
+    .filter(x => Number.isFinite(x.r.chestFlat) && Number.isFinite(x.garmentChest))
+    .sort((a,b) => a.garmentChest - b.garmentChest);
 
-  try{
-    const text = await fetchText(csvPath);
-    state.csvText = text;
+  const pick = candidates.find(x => x.garmentChest >= target) || candidates[candidates.length - 1];
+  if (!pick) return { ok:false, err: "No data" };
 
-    const parsed = parseCSV(text);
-    state.headers = parsed.headers;
-    state.rows = parsed.rows;
+  const basis = state.lang === "jp"
+    ? `${t().basisPrefix}${chest}${state.unit} + ゆとり ${Number.isFinite(ease)? ease:0}${state.unit} = ${target.toFixed(1)}${state.unit} → 仕上がり胸囲(身幅×2)が以上の最小サイズ`
+    : `${t().basisPrefix}${chest}${state.unit} + ease ${Number.isFinite(ease)? ease:0}${state.unit} = ${target.toFixed(1)}${state.unit} → smallest size where (flat chest×2) ≥ target`;
 
-    // derive a "size" value for highlighting (best effort)
-    const sizeHeader = findHeader(state.headers, [
-      "size", "サイズ", "Size"
-    ]);
-    state.rows.forEach(r => r.__sizeVal = sizeHeader ? (r[sizeHeader] ?? "") : "");
-
-    renderTable(state.headers, state.rows);
-    hideNotice();
-  }catch(err){
-    // show graceful error, but keep UI alive
-    showNotice(`${err.message}`);
-    state.headers = [];
-    state.rows = [];
-    renderTable([], []);
-  }
+  return { ok:true, size: pick.r.size, idx: pick.idx, basis };
 }
 
-// ---------------- Recommendation logic ----------------
-function recommend(){
-  hideNotice();
-  hideBasis();
-  hideActions();
+function recommendForShoes() {
+  const foot = toNum($("#inpFoot")?.value);
+  const toe = toNum($("#selToe")?.value);
 
-  const p = PRODUCTS.find(x => x.id === state.productId);
-  if (!p){
-    showNotice(t().errNoProduct);
-    showActions();
-    return;
-  }
+  if (!Number.isFinite(foot)) return { ok:false, err: t().errNeedInput };
 
-  if (!state.rows.length || !state.headers.length){
-    showNotice("CSVが読み込めていません。data/ のファイル名とパスを確認してください。");
-    showActions();
-    return;
-  }
+  const target = foot + (Number.isFinite(toe) ? toe : 0);
 
-  if (p.type === "tops"){
-    const vChest = toNumber($("#inputBodyChest")?.value);
-    const vEase = toNumber($("#inputEase")?.value);
+  const candidates = state.tableRows
+    .map((r, idx) => ({ r, idx }))
+    .filter(x => Number.isFinite(x.r.footLength))
+    .sort((a,b) => a.r.footLength - b.r.footLength);
 
-    if (!isFinite(vChest) || !isFinite(vEase)){
-      showNotice(t().errNoInput);
-      showActions();
-      return;
-    }
+  const pick = candidates.find(x => x.r.footLength >= target) || candidates[candidates.length - 1];
+  if (!pick) return { ok:false, err: "No data" };
 
-    // find chest column: half chest or full chest
-    const halfHeader = findHeader(state.headers, [
-      "身幅", "chest(flat)", "chestflat", "halfchest", "halfchestwidth", "1/2chest", "chestwidth"
-    ]);
-    const fullHeader = findHeader(state.headers, [
-      "胸囲", "chest", "garmentchest", "finishedchest", "chestcircumference"
-    ]);
-    const sizeHeader = findHeader(state.headers, ["size", "サイズ"]);
+  const basis = state.lang === "jp"
+    ? `${t().basisPrefix}${foot}${state.unit} + 捨て寸 ${Number.isFinite(toe)? toe:0}${state.unit} = ${target.toFixed(1)}${state.unit} → 足の長さが以上の最小サイズ`
+    : `${t().basisPrefix}${foot}${state.unit} + toe room ${Number.isFinite(toe)? toe:0}${state.unit} = ${target.toFixed(2)}${state.unit} → smallest size where foot length ≥ target`;
 
-    const target = vChest + vEase;
-
-    let best = null;
-    for (const r of state.rows){
-      const size = sizeHeader ? r[sizeHeader] : (r.__sizeVal || "");
-      let garmentChest = NaN;
-
-      if (halfHeader){
-        garmentChest = toNumber(r[halfHeader]) * 2;
-      } else if (fullHeader){
-        garmentChest = toNumber(r[fullHeader]);
-      }
-
-      if (!isFinite(garmentChest)) continue;
-      if (garmentChest >= target){
-        if (!best || garmentChest < best.garmentChest){
-          best = { size, garmentChest, target };
-        }
-      }
-    }
-
-    if (!best || !best.size){
-      showNotice(t().errNoMatch);
-      setResult("—");
-      showActions();
-      return;
-    }
-
-    state.lastRecommendedSize = String(best.size);
-    setResult(String(best.size));
-
-    const unit = state.unit;
-    const chestTxt = `${vChest}${unit}`;
-    const easeTxt = `+${vEase}${unit}`;
-    const targetTxt = `${best.target.toFixed( (unit==="cm") ? 0 : 1 )}${unit}`;
-    const gTxt = `${best.garmentChest.toFixed( (unit==="cm") ? 0 : 1 )}${unit}`;
-
-    const basis = (state.lang === "jp")
-      ? `根拠：胸囲 ${chestTxt} ${easeTxt} → 目標 ${targetTxt} ／ 仕上がり胸囲 ${gTxt} の「${best.size}」`
-      : `Basis: body chest ${chestTxt} ${easeTxt} → target ${targetTxt} / garment chest ${gTxt} → "${best.size}"`;
-
-    showBasis(basis);
-    showActions();
-
-    // highlight + scroll
-    highlightRow(best.size, true);
-    return;
-  }
-
-  if (p.type === "shoes"){
-    const vFoot = toNumber($("#inputFootLen")?.value);
-    const vAllow = toNumber($("#inputAllow")?.value);
-
-    if (!isFinite(vFoot) || !isFinite(vAllow)){
-      showNotice(t().errNoInput);
-      showActions();
-      return;
-    }
-
-    const sizeHeader = findHeader(state.headers, ["size", "サイズ"]);
-    const footHeader = findHeader(state.headers, [
-      "足の長さ", "footlength", "foot length", "foot"
-    ]);
-
-    const target = vFoot + vAllow;
-
-    let best = null;
-    for (const r of state.rows){
-      const size = sizeHeader ? r[sizeHeader] : (r.__sizeVal || "");
-      const fitFoot = footHeader ? toNumber(r[footHeader]) : NaN;
-      if (!isFinite(fitFoot)) continue;
-
-      if (fitFoot >= target){
-        if (!best || fitFoot < best.fitFoot){
-          best = { size, fitFoot, target };
-        }
-      }
-    }
-
-    if (!best || !best.size){
-      showNotice(t().errNoMatch);
-      setResult("—");
-      showActions();
-      return;
-    }
-
-    state.lastRecommendedSize = String(best.size);
-    setResult(String(best.size));
-
-    const unit = state.unit;
-    const footTxt = `${vFoot}${unit}`;
-    const alTxt = `+${vAllow}${unit}`;
-    const targetTxt = `${best.target.toFixed( (unit==="cm") ? 1 : 2 )}${unit}`;
-    const fitTxt = `${best.fitFoot.toFixed( (unit==="cm") ? 1 : 2 )}${unit}`;
-
-    const basis = (state.lang === "jp")
-      ? `根拠：足長 ${footTxt} ${alTxt} → 目標 ${targetTxt} ／ 対応足長 ${fitTxt} の「${best.size}」`
-      : `Basis: foot ${footTxt} ${alTxt} → target ${targetTxt} / fits ${fitTxt} → "${best.size}"`;
-
-    showBasis(basis);
-    showActions();
-
-    // highlight + scroll
-    highlightRow(best.size, true);
-    return;
-  }
+  return { ok:true, size: pick.r.size, idx: pick.idx, basis };
 }
 
-// ---------------- download ----------------
-function downloadCSV(){
-  if (!state.csvText) return;
-  const p = PRODUCTS.find(x => x.id === state.productId);
-  const name = (p ? `${p.id}_${state.unit}.csv` : `size_${state.unit}.csv`);
-  const blob = new Blob([state.csvText], { type:"text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
+// 9) Main select flow
+async function selectProduct(id) {
+  state.productId = id;
+  const p = currentProduct();
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+  // button label (2 lines)
+  const L = p.label[state.lang];
+  el.productBtnText.innerHTML = `
+    <span class="ddMain">${escapeHTML(L.main)}</span>
+    <span class="ddSub">${escapeHTML(L.sub)}</span>
+  `;
 
-// ---------------- wiring ----------------
-function init(){
-  // footer year
-  const y = new Date().getFullYear();
-  el.footerCopy.textContent = `© ${y} Transcend Color Digital Apparel`;
-
-  // initial
-  state.productId = PRODUCTS[0].id;
-  applyI18n();
   renderDropdown();
+  setGuide(p);
+  renderInputs(p);
+  renderNotes(p);
+  clearResult();
 
-  // toggles
-  el.btnJP.addEventListener("click", async () => {
-    state.lang = "jp";
-    setActive(el.btnJP, true);
-    setActive(el.btnEN, false);
-    applyI18n();
-    renderDropdown();
-    renderInputs();
-    renderNotes();
-  });
-
-  el.btnEN.addEventListener("click", async () => {
-    state.lang = "en";
-    setActive(el.btnJP, false);
-    setActive(el.btnEN, true);
-    applyI18n();
-    renderDropdown();
-    renderInputs();
-    renderNotes();
-  });
-
-  el.btnCM.addEventListener("click", async () => {
-    state.unit = "cm";
-    setActive(el.btnCM, true);
-    setActive(el.btnIN, false);
-    applyI18n();
-    await loadAndRender();
-  });
-
-  el.btnIN.addEventListener("click", async () => {
-    state.unit = "inch";
-    setActive(el.btnCM, false);
-    setActive(el.btnIN, true);
-    applyI18n();
-    await loadAndRender();
-  });
-
-  // calc
-  el.btnCalc.addEventListener("click", () => {
-    recommend();
-  });
-
-  // actions
-  el.btnReview.addEventListener("click", () => {
-    // focus first input if exists
-    const first = el.inputsArea.querySelector("input,select");
-    if (first) first.focus();
-  });
-
-  el.btnGoTable.addEventListener("click", () => {
-    scrollToTable();
-  });
-
-  // filter
-  el.tableFilter.addEventListener("input", (e) => {
-    filterTable(e.target.value);
-  });
-
-  // download
-  el.btnDownload.addEventListener("click", downloadCSV);
-
-  // initial load
-  loadAndRender();
+  // load table
+  try {
+    const path = p.csv[state.unit];
+    state.tableRows = await loadCSV(path);
+    renderTable(p);
+  } catch (e) {
+    state.tableRows = [];
+    el.tableHead.innerHTML = "";
+    el.tableBody.innerHTML = "";
+    el.errorBox.hidden = false;
+    el.errorBox.textContent = "データ読み込みに失敗しました。CSVパス/ファイル名を確認してください。";
+  }
 }
 
-init();
+function escapeHTML(s){
+  return String(s).replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+}
+
+// 10) Events
+function applyLang(lang) {
+  state.lang = lang;
+  setSeg(lang === "jp" ? el.langJP : el.langEN, lang === "jp" ? el.langEN : el.langJP);
+
+  // static labels
+  $("#titleGuide").textContent = t().guideTitle;
+  $("#guideNote").textContent = t().guideNote;
+  $("#titleInput").textContent = t().inputTitle;
+  $("#inputNote").textContent = t().inputNote;
+  $("#labelProduct").textContent = t().product;
+  $("#titleNotes").textContent = t().notes;
+  $("#titleRec").textContent = t().rec;
+  $("#titleTable").textContent = t().table;
+  $("#tableNote").textContent = t().tableNote;
+
+  el.calcBtn.textContent = t().calc;
+  el.btnFix.textContent = t().btnFix;
+  el.btnTable.textContent = t().btnTable;
+
+  renderDropdown();
+  // re-render selected product label + notes + inputs + table head text
+  selectProduct(state.productId || PRODUCTS[0].id);
+}
+
+function applyUnit(unit) {
+  state.unit = unit;
+  setSeg(unit === "cm" ? el.unitCM : el.unitIN, unit === "cm" ? el.unitIN : el.unitCM);
+  selectProduct(state.productId || PRODUCTS[0].id);
+}
+
+// Dropdown open/close
+el.productBtn.addEventListener("click", () => {
+  const open = el.productList.classList.contains("isOpen");
+  if (open) closeDropdown();
+  else openDropdown();
+});
+
+document.addEventListener("click", (e) => {
+  if (!el.productDropdown.contains(e.target)) closeDropdown();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeDropdown();
+});
+
+el.langJP.addEventListener("click", () => applyLang("jp"));
+el.langEN.addEventListener("click", () => applyLang("en"));
+el.unitCM.addEventListener("click", () => applyUnit("cm"));
+el.unitIN.addEventListener("click", () => applyUnit("inch"));
+
+el.btnFix.addEventListener("click", () => {
+  el.errorBox.hidden = true;
+  scrollTo(el.inputArea);
+});
+el.btnTable.addEventListener("click", () => {
+  el.errorBox.hidden = true;
+  scrollTo(el.tableCard);
+});
+
+el.calcBtn.addEventListener("click", () => {
+  const p = currentProduct();
+  el.errorBox.hidden = true;
+  el.errorBox.textContent = "";
+
+  const res = (p.type === "shoes") ? recommendForShoes() : recommendForTops();
+
+  if (!res.ok) {
+    clearResult();
+    el.errorBox.hidden = false;
+    el.errorBox.textContent = res.err || t().errNeedInput;
+    return;
+  }
+
+  // show result
+  el.resultBox.textContent = `${t().recPrefix}${res.size}`;
+  el.basisLine.textContent = res.basis || "";
+
+  // highlight + auto scroll to row
+  const tr = el.tableBody.querySelector(`tr[data-idx="${res.idx}"]`);
+  if (tr) highlightRow(tr);
+
+  // Also bring table into view (so user sees highlight even on mobile)
+  scrollTo(el.tableCard);
+});
+
+// 11) Init
+(function init(){
+  // default
+  applyLang("jp");
+  applyUnit("cm");
+  // product
+  selectProduct(PRODUCTS[0].id);
+})();
