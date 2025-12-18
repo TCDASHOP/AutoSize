@@ -3,11 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <title>Transcend Color Digital Apparel | Size Guide</title>
-  <meta name="description" content="TCDA Size Guide. Select an item and check the size table with JP/EN and cm/inch." />
 
-  <!-- canonical (必要ならあなたの本番ドメインに合わせて変更) -->
+  <meta name="description" content="TCDA Size Guide. Select an item and check the size table (JP/EN, cm/inch)." />
   <link rel="canonical" href="https://sizeguide.tcda.shop/" />
 
   <meta property="og:title" content="TCDA Size Guide" />
@@ -18,44 +16,58 @@
 </head>
 
 <body>
-  <header class="site-header">
-    <div class="wrap">
-      <div class="title-row">
-        <div>
-          <h1 class="site-title">Transcend Color Digital Apparel</h1>
-          <p class="site-subtitle" id="subtitle">Size Guide</p>
+  <!-- Top Nav (TCDA-like) -->
+  <header class="site-header" role="banner">
+    <div class="wrap header-inner">
+      <a class="brand" href="https://www.tcda.shop/" target="_blank" rel="noopener noreferrer" aria-label="TCDA Home">
+        Transcend Color Digital Apparel
+      </a>
+
+      <nav class="primary-nav" aria-label="Primary">
+        <a class="nav-link" href="https://www.tcda.shop/categories/6084bbf4da019c3e0cdab8f9" target="_blank" rel="noopener noreferrer">TOPS</a>
+        <a class="nav-link" href="https://www.tcda.shop/categories/66b0c8c54c3f2b002d1a3f7a" target="_blank" rel="noopener noreferrer">OUTER</a>
+        <a class="nav-link" href="https://www.tcda.shop/categories/66b0c8fd4c3f2b002d1a3f96" target="_blank" rel="noopener noreferrer">SHOES</a>
+        <a class="nav-link" href="https://www.tcda.shop/categories/66b0c94e4c3f2b002d1a3fa4" target="_blank" rel="noopener noreferrer">COLLECTION</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="pill" href="https://faq.tcda.shop/" target="_blank" rel="noopener noreferrer">FAQ</a>
+        <a class="pill" href="https://www.tcda.shop/" target="_blank" rel="noopener noreferrer" id="backToShop">Back to Shop</a>
+
+        <div class="segmented" role="tablist" aria-label="Language tabs">
+          <button class="seg-btn active" id="langJP" role="tab" aria-selected="true" type="button">JP</button>
+          <button class="seg-btn" id="langEN" role="tab" aria-selected="false" type="button">EN</button>
         </div>
-
-        <nav class="top-actions" aria-label="Top actions">
-          <a class="link-pill" href="https://www.tcda.shop/" target="_blank" rel="noopener noreferrer" id="backToShop">
-            Back to Shop
-          </a>
-
-          <div class="segmented" role="tablist" aria-label="Language tabs">
-            <button class="seg-btn" id="langJP" role="tab" aria-selected="true" type="button">JP</button>
-            <button class="seg-btn" id="langEN" role="tab" aria-selected="false" type="button">EN</button>
-          </div>
-        </nav>
       </div>
     </div>
   </header>
 
-  <main class="wrap">
+  <!-- Hero -->
+  <section class="hero" aria-label="Hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="hero-eyebrow" id="subtitle">Size Guide</p>
+        <h1 class="hero-title" id="heroTitle">Wear art. Release your senses.</h1>
+        <p class="hero-lead" id="heroLead">Art you don’t hang. You wear.</p>
+      </div>
+
+      <div class="hero-tools">
+        <div class="segmented" role="tablist" aria-label="Unit tabs">
+          <button class="seg-btn active" id="unitCM" role="tab" aria-selected="true" type="button">cm</button>
+          <button class="seg-btn" id="unitIN" role="tab" aria-selected="false" type="button">inch</button>
+        </div>
+        <div class="badge" id="unitBadge" aria-label="Unit badge">Unit: cm</div>
+      </div>
+    </div>
+  </section>
+
+  <main class="wrap main">
     <!-- Controls -->
     <section class="panel">
       <div class="controls">
-        <div class="control-left">
+        <div class="control">
           <label class="label" for="productSelect" id="labelProduct">商品</label>
           <select id="productSelect" class="select" aria-label="Product"></select>
-        </div>
-
-        <div class="control-right">
-          <div class="segmented" role="tablist" aria-label="Unit tabs">
-            <button class="seg-btn" id="unitCM" role="tab" aria-selected="true" type="button">cm</button>
-            <button class="seg-btn" id="unitIN" role="tab" aria-selected="false" type="button">inch</button>
-          </div>
-
-          <div class="badge" id="unitBadge" aria-label="Unit badge">cm</div>
         </div>
       </div>
 
@@ -68,9 +80,7 @@
     <section class="panel">
       <div class="section-head">
         <h2 class="section-title" id="titleGuide">採寸ガイド</h2>
-        <p class="section-note" id="noteGuide">
-          ※ 画像は商品に応じて切り替わります
-        </p>
+        <p class="section-note" id="noteGuide">※ 画像は商品に応じて切り替わります</p>
       </div>
 
       <div class="guide-box">
@@ -78,7 +88,7 @@
       </div>
     </section>
 
-    <!-- Size Finder -->
+    <!-- Finder -->
     <section class="panel" id="finderPanel">
       <div class="section-head">
         <h2 class="section-title" id="titleFinder">サイズの選び方（入力）</h2>
@@ -115,7 +125,7 @@
   </main>
 
   <footer class="site-footer">
-    <div class="wrap footer-row">
+    <div class="wrap footer-inner">
       <div id="footerText">© Transcend Color Digital Apparel</div>
       <div class="muted" id="footerYear"></div>
     </div>
