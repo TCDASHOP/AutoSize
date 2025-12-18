@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Transcend Color Digital Apparel | Size Guide</title>
-  <meta name="description" content="TCDA Size Guide. Select an item and switch cm / inch." />
+  <meta name="description" content="TCDA Size Guide. Select an item and switch JP/EN." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -17,30 +17,32 @@
   <main class="container">
     <section class="controls" aria-label="サイズ表コントロール">
       <div class="controls-row">
-        <label class="control-label" for="productSelect">商品</label>
+        <label id="productLabel" class="control-label" for="productSelect">商品</label>
         <select id="productSelect" class="control-select" aria-label="商品を選択">
-          <option value="" selected disabled>選択してください / Select an item</option>
+          <option id="productPlaceholder" value="" selected disabled>選択してください / Select an item</option>
         </select>
 
-        <div class="unit-toggle" role="group" aria-label="単位切り替え">
-          <button id="cmBtn" type="button" class="unit-btn is-active" aria-pressed="true">cm</button>
-          <button id="inchBtn" type="button" class="unit-btn" aria-pressed="false">inch</button>
+        <!-- ★ JP/EN 切替（JP=cm / EN=inch） -->
+        <div class="unit-toggle" role="group" aria-label="JP/EN">
+          <button id="jpBtn" type="button" class="unit-btn is-active" aria-pressed="true">JP</button>
+          <button id="enBtn" type="button" class="unit-btn" aria-pressed="false">EN</button>
+          <span id="unitBadge" style="margin-left:10px; opacity:.85;">cm</span>
         </div>
       </div>
     </section>
 
     <section class="guide">
-      <h2 class="section-title">採寸ガイド</h2>
+      <h2 id="guideTitle" class="section-title">採寸ガイド</h2>
       <div class="guide-wrap">
         <img id="guideImage" alt="採寸ガイド画像 / Measurement guide image" loading="lazy" />
       </div>
-      <p class="note">※ 画像は商品に応じて切り替わります / Image changes by product.</p>
+      <p id="imageNote" class="note">※ 画像は商品に応じて切り替わります / Image changes by product.</p>
     </section>
 
     <section class="table-section" aria-label="サイズ表">
-      <h2 class="section-title">サイズ表</h2>
+      <h2 id="tableTitle" class="section-title">サイズ表</h2>
       <div id="tableContainer" class="table-container">
-        <div class="status">商品を選択してください / Please select an item.</div>
+        <div id="statusText" class="status">商品を選択してください / Please select an item.</div>
       </div>
     </section>
   </main>
