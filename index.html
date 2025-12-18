@@ -20,20 +20,17 @@
         <button class="toggleBtn" id="langJP" type="button">JP</button>
         <button class="toggleBtn" id="langEN" type="button">EN</button>
       </div>
-
-      <div class="toggleGroup" aria-label="Unit">
-        <button class="toggleBtn" id="unitCM" type="button">cm</button>
-        <button class="toggleBtn" id="unitIN" type="button">inch</button>
-      </div>
+      <div class="unitPill" id="unitPill">cm</div>
     </div>
   </header>
 
   <main class="container">
+    <!-- Guide -->
     <section class="card" id="guideCard">
       <div class="cardHead">
         <div>
-          <div class="cardTitle" id="titleGuide">Measuring Guide</div>
-          <div class="cardHint" id="hintGuide">Image changes by product.</div>
+          <div class="cardTitle" id="titleGuide">採寸ガイド</div>
+          <div class="cardHint" id="hintGuide">画像は商品に応じて切り替わります。</div>
         </div>
       </div>
 
@@ -44,19 +41,19 @@
       </div>
     </section>
 
+    <!-- Input + Result -->
     <section class="card" id="inputCard">
       <div class="cardHead">
         <div>
-          <div class="cardTitle" id="titleInput">Input (optional)</div>
-          <div class="cardHint" id="hintInput">You can view the size table without input.</div>
+          <div class="cardTitle" id="titleInput">サイズ算出（任意入力）</div>
+          <div class="cardHint" id="hintInput">入力なしでもサイズ表だけ見て選べます。</div>
         </div>
-        <div class="unitBadge" id="unitBadge">cm</div>
       </div>
 
       <div class="field">
-        <label class="label" id="labelProduct" for="productButton">Product</label>
+        <label class="label" id="labelProduct" for="productButton">商品</label>
 
-        <!-- Custom dropdown (2-line label works on all devices) -->
+        <!-- Custom dropdown (2-line labels, device-safe) -->
         <div class="combo" id="productCombo">
           <button class="comboButton" id="productButton" type="button"
             aria-haspopup="listbox" aria-expanded="false">
@@ -69,22 +66,22 @@
 
       <div id="inputArea"></div>
 
-      <button class="primaryBtn" id="calcBtn" type="button">Calculate recommended size</button>
+      <button class="primaryBtn" id="calcBtn" type="button">おすすめサイズを計算</button>
 
-      <div class="sectionTitle" id="titleNotes">Notes when choosing</div>
+      <div class="sectionTitle" id="titleNotes">選ぶときの注意事項</div>
       <div class="noticeBox" id="noticeBox"></div>
 
-      <div class="sectionTitle" id="titleResult">Recommended</div>
+      <div class="sectionTitle" id="titleResult">おすすめ</div>
       <div class="resultBox" id="resultBox">—</div>
     </section>
 
+    <!-- Table -->
     <section class="card full" id="tableCard">
       <div class="cardHead">
         <div>
-          <div class="cardTitle" id="titleTable">Size Table</div>
-          <div class="cardHint" id="hintTable">Values are flat measurements (±1–2).</div>
+          <div class="cardTitle" id="titleTable">サイズ表</div>
+          <div class="cardHint" id="hintTable">数値は平置き採寸です（誤差 ±1〜2）。</div>
         </div>
-        <button class="btnMini" id="downloadCsvBtn" type="button">Download CSV</button>
       </div>
 
       <div class="tableWrap" role="region" aria-label="Size table">
@@ -97,7 +94,7 @@
   </main>
 
   <footer class="footer">
-    <a class="footerLink" id="backToShop" href="https://www.tcda.shop/" target="_blank" rel="noopener">Back to Shop</a>
+    <a class="footerLink" href="https://www.tcda.shop/" target="_blank" rel="noopener">Back to Shop</a>
     <div class="footerCopy" id="footerCopy"></div>
   </footer>
 
