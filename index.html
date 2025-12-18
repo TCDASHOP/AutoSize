@@ -3,101 +3,107 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="color-scheme" content="dark" />
   <title>TCDA Size Guide</title>
+  <meta name="description" content="TCDA size guide. Calculate a recommended size from your measurements, or choose from the size table." />
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="brandName">Transcend Color Digital Apparel</div>
-      <div class="brandSub" id="brandSub">Size Guide</div>
+      <div class="brand__name">Transcend Color Digital Apparel</div>
+      <div class="brand__sub">Size Guide</div>
     </div>
 
-    <div class="topControls">
-      <div class="toggleGroup" aria-label="Language">
-        <button class="toggleBtn" id="langJP" type="button">JP</button>
-        <button class="toggleBtn" id="langEN" type="button">EN</button>
+    <div class="toggles">
+      <div class="seg" role="group" aria-label="Language">
+        <button id="btnJP" class="seg__btn is-active" type="button">JP</button>
+        <button id="btnEN" class="seg__btn" type="button">EN</button>
       </div>
-      <div class="unitPill" id="unitPill">cm</div>
+
+      <div class="seg" role="group" aria-label="Unit">
+        <button id="btnCM" class="seg__btn is-active" type="button">cm</button>
+        <button id="btnIN" class="seg__btn" type="button">inch</button>
+      </div>
     </div>
   </header>
 
-  <main class="container">
-    <!-- Guide -->
-    <section class="card" id="guideCard">
-      <div class="cardHead">
-        <div>
-          <div class="cardTitle" id="titleGuide">採寸ガイド</div>
-          <div class="cardHint" id="hintGuide">画像は商品に応じて切り替わります。</div>
+  <main class="wrap">
+    <section class="grid">
+      <!-- Left: guide -->
+      <section class="card">
+        <div class="card__head">
+          <h2 id="titleGuide">採寸ガイド</h2>
+          <div class="muted" id="subGuide">※画像は商品に応じて切り替わります</div>
         </div>
-      </div>
 
-      <div class="guideWrap">
-        <img id="guideImage" class="guideImage" src="assets/guide_tshirt.jpg" alt="Measuring guide" loading="eager" />
-        <div class="imgNote" id="imgNote">※ 画像は商品に応じて切り替わります</div>
-        <div class="imgFallback" id="imgFallback" hidden></div>
-      </div>
-    </section>
+        <figure class="guide">
+          <img id="guideImage" class="guide__img" src="assets/guide_tshirt.jpg" alt="Measuring guide" loading="eager" />
+          <figcaption class="guide__note" id="imgNote">A: 身幅 / B: 着丈 / C: 袖丈</figcaption>
+        </figure>
+      </section>
 
-    <!-- Input + Result -->
-    <section class="card" id="inputCard">
-      <div class="cardHead">
-        <div>
-          <div class="cardTitle" id="titleInput">サイズ算出（任意入力）</div>
-          <div class="cardHint" id="hintInput">入力なしでもサイズ表だけ見て選べます。</div>
+      <!-- Right: input + notes + result -->
+      <section class="card">
+        <div class="card__head">
+          <h2 id="titleInput">サイズ算出（任意入力）</h2>
+          <div class="muted" id="hintInput">入力しなくてもサイズ表だけ見て選べます</div>
         </div>
-      </div>
 
-      <div class="field">
-        <label class="label" id="labelProduct" for="productButton">商品</label>
-
-        <!-- Custom dropdown (2-line labels, device-safe) -->
-        <div class="combo" id="productCombo">
-          <button class="comboButton" id="productButton" type="button"
-            aria-haspopup="listbox" aria-expanded="false">
-            <span class="comboText" id="productButtonText"></span>
-            <span class="comboChevron" aria-hidden="true">▾</span>
-          </button>
-          <div class="comboList" id="productList" role="listbox" tabindex="-1" hidden></div>
+        <!-- Custom dropdown (product) -->
+        <div class="field">
+          <label class="label" id="labelProduct">商品</label>
+          <div class="cselect" id="productSelect">
+            <button class="cselect__btn" id="productBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span class="cselect__btnText" id="productBtnText">—</span>
+              <span class="cselect__chev" aria-hidden="true">▾</span>
+            </button>
+            <div class="cselect__panel" id="productPanel" role="listbox" aria-label="Products"></div>
+          </div>
         </div>
-      </div>
 
-      <div id="inputArea"></div>
+        <!-- Dynamic inputs (only needed ones appear) -->
+        <div id="inputArea" class="inputs"></div>
 
-      <button class="primaryBtn" id="calcBtn" type="button">おすすめサイズを計算</button>
+        <div class="actions">
+          <button id="btnCalc" class="btn btn-primary" type="button" disabled>おすすめサイズを計算</button>
+        </div>
 
-      <div class="sectionTitle" id="titleNotes">選ぶときの注意事項</div>
-      <div class="noticeBox" id="noticeBox"></div>
+        <div class="sectionTitle" id="titleNotes">選ぶときの注意事項</div>
+        <div id="noticeBox" class="notice"></div>
 
-      <div class="sectionTitle" id="titleResult">おすすめ</div>
-      <div class="resultBox" id="resultBox">—</div>
+        <div class="sectionTitle" id="titleReco">おすすめ</div>
+        <div id="resultBox" class="result">
+          <div class="result__main" id="resultMain">—</div>
+          <div class="result__basis" id="resultBasis"></div>
+          <div class="result__actions" id="resultActions"></div>
+        </div>
+      </section>
     </section>
 
     <!-- Table -->
-    <section class="card full" id="tableCard">
-      <div class="cardHead">
+    <section class="card">
+      <div class="card__head row">
         <div>
-          <div class="cardTitle" id="titleTable">サイズ表</div>
-          <div class="cardHint" id="hintTable">数値は平置き採寸です（誤差 ±1〜2）。</div>
+          <h2 id="titleTable">サイズ表</h2>
+          <div class="muted" id="hintTable">数値は平置き採寸です（誤差 ±1〜2）</div>
         </div>
+        <a id="btnDownload" class="btn" href="#" download>Download CSV</a>
       </div>
 
-      <div class="tableWrap" role="region" aria-label="Size table">
-        <table class="table">
+      <div class="tableWrap" id="tableWrap">
+        <table class="table" id="sizeTable" aria-label="Size table">
           <thead id="tableHead"></thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
     </section>
+
+    <footer class="footer">
+      <a class="footer__link" href="https://www.tcda.shop/" target="_blank" rel="noopener">Back to Shop</a>
+      <div class="footer__copy" id="footerCopy">© 2025 Transcend Color Digital Apparel</div>
+    </footer>
   </main>
 
-  <footer class="footer">
-    <a class="footerLink" href="https://www.tcda.shop/" target="_blank" rel="noopener">Back to Shop</a>
-    <div class="footerCopy" id="footerCopy"></div>
-  </footer>
-
-  <script src="app.js" defer></script>
+  <script src="app.js"></script>
 </body>
 </html>
