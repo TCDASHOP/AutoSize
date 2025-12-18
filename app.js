@@ -1,609 +1,696 @@
-/* TCDA Size Guide (CSV-driven)
-   - JP: cm fixed
-   - EN: inch fixed
-   - Per-category tips + simple recommendation helper
-*/
+(() => {
+  "use strict";
 
-const state = {
-  lang: "JP",          // JP / EN
-  unit: "cm",          // cm / inch (derived from lang)
-  productKey: "mens_crew",
-  table: null,         // { headers:[], rows:[{...}] }
-};
+  const $ = (sel) => document.querySelector(sel);
 
-const PRODUCTS = [
-  {
-    key: "womens_slipon",
-    category: "shoes",
-    name: { JP: "Women's slip-on canvas shoes", EN: "Women's slip-on canvas shoes" },
-    nameShort: { JP: "ウィメンズ スリッポン", EN: "Women’s Slip-On" },
-    csvBase: "womens_slipon",
-    guide: "./assets/guide_slipon.jpg",
-  },
-  {
-    key: "mens_slipon",
-    category: "shoes",
-    name: { JP: "Men's slip-on canvas shoes", EN: "Men's slip-on canvas shoes" },
-    nameShort: { JP: "メンズ スリッポン", EN: "Men’s Slip-On" },
-    csvBase: "mens_slipon",
-    guide: "./assets/guide_slipon.jpg",
-  },
-  {
-    key: "womens_crew",
-    category: "tshirt",
-    name: { JP: "Women's Crew Neck T-Shirt", EN: "Women's Crew Neck T-Shirt" },
-    nameShort: { JP: "ウィメンズ クルーネックT", EN: "Women’s Crew Neck T-Shirt" },
-    csvBase: "aop_womens_crew",
-    guide: "./assets/guide_tshirt.jpg",
-  },
-  {
-    key: "mens_crew",
-    category: "tshirt",
-    name: { JP: "Men's Crew Neck T-Shirt", EN: "Men's Crew Neck T-Shirt" },
-    nameShort: { JP: "メンズ クルーネックT", EN: "Men’s Crew Neck T-Shirt" },
-    csvBase: "aop_mens_crew",
-    guide: "./assets/guide_tshirt.jpg",
-  },
-  {
-    key: "unisex_hoodie",
-    category: "hoodie",
-    name: { JP: "Unisex Hoodie", EN: "Unisex Hoodie" },
-    nameShort: { JP: "ユニセックス パーカー", EN: "Unisex Hoodie" },
-    csvBase: "aop_recycled_hoodie",
-    guide: "./assets/guide_hoodie.jpg",
-  },
-  {
-    key: "unisex_zip_hoodie",
-    category: "hoodie",
-    name: { JP: "Unisex ZIP Hoodie", EN: "Unisex ZIP Hoodie" },
-    nameShort: { JP: "ユニセックス ZIP", EN: "Unisex ZIP Hoodie" },
-    csvBase: "aop_recycled_zip_hoodie",
-    guide: "./assets/guide_zip_hoodie.jpg",
-  },
-];
-
-const TEXT = {
-  JP: {
-    product: "商品",
-    unit: "単位",
-    guide: "採寸ガイド",
-    tips: "選ぶときの注意事項",
-    calc: "サイズ目安（入力）",
-    table: "サイズ表",
-    recommend: "おすすめ",
-    imgNote: "※ 画像は商品に応じて切り替わります",
-    resultNone: "—",
-    // calculator labels
-    chest: "ヌード胸囲（体の胸囲）",
-    fit: "着用のゆとり",
-    fit_regular: "標準（+8〜12cm 目安）",
-    fit_relaxed: "ゆったり（+12〜16cm 目安）",
-    fit_oversize: "オーバー（+16〜22cm 目安）",
-    foot: "足長（かかと〜一番長い指）",
-    allowance: "捨て寸",
-    calcBtn: "おすすめサイズを計算",
-    metaTop: "胸囲→仕上がり胸囲→身幅（平置き×2）で照合",
-    metaShoe: "足長＋捨て寸で「Foot length」に近いサイズを選定",
-  },
-  EN: {
-    product: "Product",
-    unit: "Unit",
-    guide: "Measurement Guide",
-    tips: "Sizing Tips",
-    calc: "Quick Recommendation",
-    table: "Size Table",
-    recommend: "Recommended",
-    imgNote: "Image changes by product.",
-    resultNone: "—",
-    // calculator labels
-    chest: "Nude chest (body)",
-    fit: "Ease preference",
-    fit_regular: "Regular (+3–5 in typical)",
-    fit_relaxed: "Relaxed (+5–6 in typical)",
-    fit_oversize: "Oversized (+6–9 in typical)",
-    foot: "Foot length (heel → longest toe)",
-    allowance: "Allowance",
-    calcBtn: "Calculate recommended size",
-    metaTop: "Match: body chest → finished chest → chest width (flat ×2)",
-    metaShoe: "Use: foot length + allowance, match to Foot length",
-  },
-};
-
-function $(id) { return document.getElementById(id); }
-
-function setLang(lang) {
-  state.lang = lang;
-  state.unit = (lang === "JP") ? "cm" : "inch";
-
-  $("langJP").classList.toggle("is-active", lang === "JP");
-  $("langEN").classList.toggle("is-active", lang === "EN");
-  $("langJP").setAttribute("aria-pressed", lang === "JP");
-  $("langEN").setAttribute("aria-pressed", lang === "EN");
-
-  applyText();
-  loadProduct(state.productKey);
-}
-
-function applyText() {
-  const t = TEXT[state.lang];
-  $("productLabel").textContent = t.product;
-  $("unitLabel").textContent = t.unit;
-  $("unitValue").textContent = state.unit;
-  $("guideTitle").textContent = t.guide;
-  $("tipsTitle").textContent = t.tips;
-  $("calcTitle").textContent = t.calc;
-  $("tableTitle").textContent = t.table;
-  $("resultLabel").textContent = t.recommend;
-  $("imgNote").textContent = t.imgNote;
-
-  // product select options (language-aware)
-  const sel = $("productSelect");
-  sel.innerHTML = "";
-  for (const p of PRODUCTS) {
-    const opt = document.createElement("option");
-    opt.value = p.key;
-    // 表示は短く、改行はしない（iOS selectが崩れるので）
-    opt.textContent = (state.lang === "JP") ? p.nameShort.JP : p.nameShort.EN;
-    sel.appendChild(opt);
-  }
-  sel.value = state.productKey;
-}
-
-function getProduct(key) {
-  return PRODUCTS.find(p => p.key === key) || PRODUCTS[0];
-}
-
-function csvPathFor(product) {
-  const suffix = (state.unit === "cm") ? "_cm.csv" : "_inch.csv";
-  return `./data/${product.csvBase}${suffix}`;
-}
-
-/* -------- CSV parser (quotes supported) -------- */
-function parseCSV(text) {
-  const lines = text.replace(/\r/g, "").split("\n").filter(l => l.trim().length > 0);
-  const rows = lines.map(parseCSVLine);
-  const headers = rows[0].map(h => h.trim());
-  const data = [];
-  for (let i = 1; i < rows.length; i++) {
-    const obj = {};
-    for (let c = 0; c < headers.length; c++) {
-      obj[headers[c]] = (rows[i][c] ?? "").trim();
-    }
-    data.push(obj);
-  }
-  return { headers, rows: data };
-}
-
-function parseCSVLine(line) {
-  const out = [];
-  let cur = "";
-  let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
-      else { inQ = !inQ; }
-    } else if (ch === "," && !inQ) {
-      out.push(cur);
-      cur = "";
-    } else {
-      cur += ch;
-    }
-  }
-  out.push(cur);
-  return out;
-}
-
-/* -------- numeric parsing for cm / inch incl fractions -------- */
-const UNICODE_FRACTIONS = {
-  "¼": 0.25, "½": 0.5, "¾": 0.75,
-  "⅛": 0.125, "⅜": 0.375, "⅝": 0.625, "⅞": 0.875,
-  "⅓": 1 / 3, "⅔": 2 / 3,
-  "⅕": 0.2, "⅖": 0.4, "⅗": 0.6, "⅘": 0.8,
-  "⅙": 1 / 6, "⅚": 5 / 6,
-};
-
-function toNumber(v) {
-  if (v == null) return NaN;
-  let s = String(v).trim();
-  if (!s) return NaN;
-
-  // normalize weird spaces
-  s = s.replace(/\u00A0/g, " ");
-
-  // pure float
-  if (/^[0-9]+(\.[0-9]+)?$/.test(s)) return parseFloat(s);
-
-  // "10 1/4"
-  if (/^[0-9]+\s+[0-9]+\/[0-9]+$/.test(s)) {
-    const [w, f] = s.split(/\s+/);
-    const [a, b] = f.split("/").map(Number);
-    return Number(w) + (a / b);
-  }
-
-  // "1/4"
-  if (/^[0-9]+\/[0-9]+$/.test(s)) {
-    const [a, b] = s.split("/").map(Number);
-    return a / b;
-  }
-
-  // unicode fraction "9 ⅛" or just "⅛"
-  for (const uf of Object.keys(UNICODE_FRACTIONS)) {
-    if (s === uf) return UNICODE_FRACTIONS[uf];
-    if (s.endsWith(uf)) {
-      const base = s.replace(uf, "").trim();
-      const whole = base ? parseFloat(base) : 0;
-      if (!Number.isNaN(whole)) return whole + UNICODE_FRACTIONS[uf];
-    }
-  }
-
-  // fallback: pick first float in string
-  const m = s.match(/[0-9]+(\.[0-9]+)?/);
-  return m ? parseFloat(m[0]) : NaN;
-}
-
-/* -------- column detection -------- */
-function findHeader(headers, candidates) {
-  const lower = headers.map(h => h.toLowerCase());
-  for (const c of candidates) {
-    const idx = lower.findIndex(h => h.includes(c));
-    if (idx >= 0) return headers[idx];
-  }
-  return null;
-}
-
-function renderTable(table) {
-  const wrap = $("tableArea");
-  wrap.innerHTML = "";
-
-  const t = document.createElement("table");
-  t.className = "dataTable";
-
-  const thead = document.createElement("thead");
-  const trh = document.createElement("tr");
-  for (const h of table.headers) {
-    const th = document.createElement("th");
-    th.textContent = h;
-    trh.appendChild(th);
-  }
-  thead.appendChild(trh);
-  t.appendChild(thead);
-
-  const tbody = document.createElement("tbody");
-  for (const row of table.rows) {
-    const tr = document.createElement("tr");
-    for (const h of table.headers) {
-      const td = document.createElement("td");
-      td.textContent = row[h] ?? "";
-      tr.appendChild(td);
-    }
-    tbody.appendChild(tr);
-  }
-  t.appendChild(tbody);
-
-  wrap.appendChild(t);
-}
-
-function setGuideImage(product) {
-  $("guideImage").src = product.guide;
-  $("guideImage").alt = `${product.name[state.lang]} guide`;
-}
-
-/* -------- tips by category -------- */
-function setTips(product) {
-  const ul = $("tipsList");
-  ul.innerHTML = "";
-  const lang = state.lang;
-
-  const tipsByCat = {
-    tshirt: {
-      JP: [
-        "Men’s はゆったり・直線的、Women’s はフィット寄りになりやすい。",
-        "最短で失敗を減らす：手持ちの「いちばん好きなTシャツ」を平置きで測り、近い数値を選ぶ。",
-        "体から逆算：ヌード胸囲＋ゆとり → 仕上がり胸囲 → 身幅（仕上がり胸囲÷2）。",
-        "優先順位：身幅 → 着丈 → 袖丈（袖は肩線位置で体感が変わる）。",
-      ],
-      EN: [
-        "Men’s tees tend to feel straighter/roomier; Women’s tees tend to feel more fitted.",
-        "Fastest, safest route: measure your favorite tee (flat) and pick the closest numbers.",
-        "From body: nude chest + ease → finished chest → chest width (finished chest ÷ 2).",
-        "Priority: chest width → length → sleeve (sleeve feel changes with shoulder seam).",
-      ]
-    },
-    hoodie: {
-      JP: [
-        "基本はTシャツと同じ：胸囲基準＋ゆとりで身幅を合わせ、次に着丈、最後に袖。",
-        "フーディは裾リブ等で体感が変わるため、同じ数値でも印象が少し違う。",
-      ],
-      EN: [
-        "Same base logic as tees: match chest width first, then length, then sleeves.",
-        "Hoodies can feel different even with same numbers due to ribbing and structure.",
-      ]
-    },
-    shoes: {
-      JP: [
-        "主役は足長（かかと〜一番長い指）。左右を測って長い方を採用。",
-        "捨て寸：足長＋7〜12mm（目安）。アウトソール長は外寸なので同一視しない。",
-        "Men’s は幅広め、Women’s はタイトになりやすい。幅広/甲高は注意（迷ったら大きめ寄り）。",
-      ],
-      EN: [
-        "Main metric is foot length (heel → longest toe). Measure both feet; use the longer one.",
-        "Allowance: foot length + ~0.25–0.5 in. Outsole length is external; don’t treat it as foot length.",
-        "Men’s tends to be wider; Women’s can feel tighter. Wide/high instep: consider sizing up if unsure.",
-      ]
-    }
+  // ---- Locale / unit ---------------------------------------------------------
+  const detectLocale = () => {
+    const lang = (navigator.language || "ja").toLowerCase();
+    return lang.startsWith("ja") ? "JP" : "EN";
   };
 
-  const tips = tipsByCat[product.category]?.[lang] ?? [];
-  for (const s of tips) {
-    const li = document.createElement("li");
-    li.textContent = s;
-    ul.appendChild(li);
-  }
-}
+  const state = {
+    locale: detectLocale(), // "JP" | "EN"
+    unit: null,             // "cm" | "inch" (auto from locale)
+    productId: null,
+    csvRows: [],
+    csvHeaders: [],
+  };
 
-/* -------- calculator UI + recommendation -------- */
-function renderCalculator(product, table) {
-  const area = $("calcArea");
-  area.innerHTML = "";
+  const setUnitFromLocale = () => {
+    state.unit = (state.locale === "JP") ? "cm" : "inch";
+  };
 
-  $("resultValue").textContent = TEXT[state.lang].resultNone;
-  $("resultMeta").textContent = "";
+  // ---- Products --------------------------------------------------------------
+  // CSV filenames must match your repo: /data/*.csv
+  // Images must match your repo: /assets/guide_*.jpg
+  const PRODUCTS = [
+    {
+      id: "slipon_w",
+      category: "shoes",
+      nameJP: "ウィメンズ スリッポン",
+      nameEN: "Women's slip-on canvas shoes",
+      guideImage: "./assets/guide_slipon.jpg",
+      csv: { cm: "./data/womens_slipon_cm.csv", inch: "./data/womens_slipon_inch.csv" },
+    },
+    {
+      id: "slipon_m",
+      category: "shoes",
+      nameJP: "メンズ スリッポン",
+      nameEN: "Men's slip-on canvas shoes",
+      guideImage: "./assets/guide_slipon.jpg",
+      csv: { cm: "./data/mens_slipon_cm.csv", inch: "./data/mens_slipon_inch.csv" },
+    },
+    {
+      id: "tee_w",
+      category: "tshirt",
+      nameJP: "ウィメンズ クルーネックT",
+      nameEN: "Women's Crew Neck T-Shirt",
+      guideImage: "./assets/guide_tshirt.jpg",
+      csv: { cm: "./data/aop_womens_crew_cm.csv", inch: "./data/aop_womens_crew_inch.csv" },
+    },
+    {
+      id: "tee_m",
+      category: "tshirt",
+      nameJP: "メンズ クルーネックT",
+      nameEN: "Men's Crew Neck T-Shirt",
+      guideImage: "./assets/guide_tshirt.jpg",
+      csv: { cm: "./data/aop_mens_crew_cm.csv", inch: "./data/aop_mens_crew_inch.csv" },
+    },
+    {
+      id: "hoodie",
+      category: "hoodie",
+      nameJP: "ユニセックス パーカー",
+      nameEN: "Unisex Hoodie",
+      guideImage: "./assets/guide_hoodie.jpg",
+      csv: { cm: "./data/aop_recycled_hoodie_cm.csv", inch: "./data/aop_recycled_hoodie_inch.csv" },
+    },
+    {
+      id: "ziphoodie",
+      category: "hoodie",
+      nameJP: "ユニセックス ジップパーカー",
+      nameEN: "Unisex ZIP Hoodie",
+      guideImage: "./assets/guide_zip_hoodie.jpg",
+      csv: { cm: "./data/aop_recycled_zip_hoodie_cm.csv", inch: "./data/aop_recycled_zip_hoodie_inch.csv" },
+    },
+  ];
 
-  if (!table) return;
+  // ---- Copy ------------------------------------------------------------------
+  const COPY = {
+    JP: {
+      panelTitle: "サイズガイド",
+      productLabel: "商品",
+      guideTitle: "採寸ガイド",
+      guideCap: "※ 画像は商品に応じて切り替わります",
+      inputTitle: "入力（任意）",
+      notesTitle: "選ぶときの注意事項",
+      resultTitle: "おすすめ",
+      tableTitle: "サイズ表",
+      tableHint: "※ 採寸方法により ±1–2 の誤差が出る場合があります",
+      resultHint: "入力しなくてもサイズ表は見られます。迷う場合は「手持ちの好きな服（靴）」の実寸と照合してください。",
+      // Form labels
+      chestLabel: "ヌード胸囲（cm）",
+      footLabel: "足長（cm）",
+      easeLabel: "ゆとり（目安）",
+      allowLabel: "捨て寸（目安）",
+      calcBtn: "おすすめサイズを計算",
+      // Result text
+      recTitle: "おすすめサイズ",
+      recNone: "おすすめ算出に必要な列がCSVに見つかりませんでした。サイズ表で確認してください。",
+      // Notes per category
+      notes: {
+        tshirt: [
+          "Men’sはゆったり・直線的、Women’sはフィット寄りになりやすい。",
+          "最短で失敗を減らす：手持ちの「いちばん好きな服」を平置きで測り、近い数値を選ぶ。",
+          "優先順位：身幅 → 着丈 → 袖丈（袖は肩線位置で体感が変わります）。",
+        ],
+        hoodie: [
+          "基本はTシャツと同じ（胸囲→身幅→着丈→袖）。",
+          "フーディは裾リブ等で体感が変わるため、同じ数値でも印象が少し変わります。",
+          "迷ったら「標準」→動きやすさ重視は「ゆったり」。",
+        ],
+        shoes: [
+          "主役は足長（かかと〜一番長い指）。左右を測って長い方を採用。",
+          "捨て寸：足長＋0.7〜1.2cm（目安）。アウトソール長は外寸なので足長と同一視しない。",
+          "幅/甲：Men’sは幅広め、Women’sはタイトになりやすい。幅広/甲高は迷ったら大きめ寄り。",
+        ],
+      },
+      // Ease options (cm)
+      easeOptions: [
+        { value: "8", label: "標準（+8cm 目安）" },
+        { value: "10", label: "ゆったり（+10cm 目安）" },
+        { value: "12", label: "かなりゆったり（+12cm 目安）" },
+      ],
+      // Shoe allowance options (cm)
+      shoeAllow: [
+        { value: "0.7", label: "+0.7cm（ぴったり寄り）" },
+        { value: "0.9", label: "+0.9cm（標準）" },
+        { value: "1.2", label: "+1.2cm（ゆったり寄り）" },
+      ],
+    },
 
-  if (product.category === "tshirt" || product.category === "hoodie") {
-    const t = TEXT[state.lang];
+    EN: {
+      panelTitle: "Size Guide",
+      productLabel: "Product",
+      guideTitle: "Measuring Guide",
+      guideCap: "Image changes by product.",
+      inputTitle: "Input (optional)",
+      notesTitle: "Notes when choosing",
+      resultTitle: "Recommended",
+      tableTitle: "Size Table",
+      tableHint: "Measurements may vary by about ±1–2 depending on how they are measured.",
+      resultHint: "You can view the size table without input. To avoid mistakes, compare with your favorite item’s flat measurements.",
+      // Form labels
+      chestLabel: "Nude chest (in)",
+      footLabel: "Foot length (in)",
+      easeLabel: "Ease (guide)",
+      allowLabel: "Allowance (guide)",
+      calcBtn: "Calculate recommended size",
+      // Result text
+      recTitle: "Recommended size",
+      recNone: "Required columns were not found in the CSV. Please check the size table.",
+      // Notes per category
+      notes: {
+        tshirt: [
+          "Men’s tends to be straighter/roomier; Women’s tends to fit closer.",
+          "Fastest way to avoid mistakes: measure your favorite T-shirt (flat width/length/sleeve) and pick the closest numbers.",
+          "Priority: chest width → length → sleeve (sleeve feel changes with shoulder seam position).",
+        ],
+        hoodie: [
+          "Same logic as T-shirts (chest → width → length → sleeve).",
+          "Hoodies can feel different even with the same numbers due to rib/hem structure.",
+          "If unsure: start with “Standard”, size up for easier movement.",
+        ],
+        shoes: [
+          "Foot length (heel to longest toe) is key. Measure both feet and use the longer one.",
+          "Allowance: add ~0.3–0.5 in. Outsole length is the outer measurement—do not treat it as foot length.",
+          "Men’s tends to be wider; Women’s can feel tighter. For wide/high instep, consider sizing up.",
+        ],
+      },
+      // Ease options (inch) approx 8–12cm
+      easeOptions: [
+        { value: "3.0", label: "Standard (+3.0 in guide)" },
+        { value: "4.0", label: "Relaxed (+4.0 in guide)" },
+        { value: "5.0", label: "Very relaxed (+5.0 in guide)" },
+      ],
+      // Shoe allowance options (inch) approx 7–12mm
+      shoeAllow: [
+        { value: "0.30", label: "+0.30 in (snug)" },
+        { value: "0.40", label: "+0.40 in (standard)" },
+        { value: "0.50", label: "+0.50 in (roomy)" },
+      ],
+    },
+  };
 
-    const chestHeader =
-      findHeader(table.headers, ["身幅", "chest", "width"]) ||
-      table.headers[1] || null;
+  // ---- CSV parsing -----------------------------------------------------------
+  const stripBOM = (s) => s.replace(/^\uFEFF/, "");
 
-    const sizeHeader =
-      findHeader(table.headers, ["サイズ", "size"]) ||
-      table.headers[0] || null;
+  function parseCSV(text) {
+    // small but robust CSV parser (handles quotes)
+    const rows = [];
+    let row = [];
+    let field = "";
+    let inQuotes = false;
 
-    const chestRowInfo = document.createElement("div");
-    chestRowInfo.className = "miniNote";
-    chestRowInfo.textContent = (state.lang === "JP")
-      ? "計算は「身幅（平置き）×2」を仕上がり胸囲として扱います。"
-      : "We treat “chest width (flat) × 2” as the finished chest.";
+    const pushField = () => {
+      row.push(field);
+      field = "";
+    };
+    const pushRow = () => {
+      // ignore completely empty rows
+      if (row.some(v => String(v).trim() !== "")) rows.push(row);
+      row = [];
+    };
 
-    area.appendChild(chestRowInfo);
+    const src = stripBOM(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    for (let i = 0; i < src.length; i++) {
+      const c = src[i];
 
-    const row1 = document.createElement("div");
-    row1.className = "calc__row";
-
-    row1.innerHTML = `
-      <div class="field">
-        <label class="label">${t.chest} (${state.unit})</label>
-        <input id="inpChest" class="input" inputmode="decimal" type="number" min="0" step="0.1" placeholder="${state.unit === "cm" ? "例: 88" : "e.g. 36.5"}">
-      </div>
-
-      <div class="field">
-        <label class="label">${t.fit}</label>
-        <select id="inpFit" class="select">
-          <option value="regular">${t.fit_regular}</option>
-          <option value="relaxed">${t.fit_relaxed}</option>
-          <option value="oversize">${t.fit_oversize}</option>
-        </select>
-      </div>
-    `;
-    area.appendChild(row1);
-
-    const btn = document.createElement("button");
-    btn.className = "btn";
-    btn.type = "button";
-    btn.textContent = t.calcBtn;
-    btn.addEventListener("click", () => {
-      const nude = parseFloat($("inpChest").value);
-      if (!nude || nude <= 0) {
-        $("resultValue").textContent = state.lang === "JP" ? "胸囲を入力してください" : "Enter your chest measurement";
-        $("resultMeta").textContent = "";
-        return;
-      }
-      const fit = $("inpFit").value;
-
-      // ease defaults
-      let easeMin, easeMax;
-      if (state.unit === "cm") {
-        if (fit === "regular") [easeMin, easeMax] = [8, 12];
-        if (fit === "relaxed") [easeMin, easeMax] = [12, 16];
-        if (fit === "oversize") [easeMin, easeMax] = [16, 22];
-      } else {
-        if (fit === "regular") [easeMin, easeMax] = [3, 5];
-        if (fit === "relaxed") [easeMin, easeMax] = [5, 6];
-        if (fit === "oversize") [easeMin, easeMax] = [6, 9];
-      }
-
-      const targetMin = nude + easeMin;
-      const targetMax = nude + easeMax;
-
-      // pick smallest size where (chestWidth*2) >= targetMin
-      let best = null;
-      let bestChest = null;
-
-      for (const r of table.rows) {
-        const size = r[sizeHeader];
-        const cw = toNumber(r[chestHeader]);
-        if (!Number.isFinite(cw)) continue;
-        const finishedChest = cw * 2;
-
-        if (finishedChest >= targetMin) {
-          best = size;
-          bestChest = finishedChest;
-          break;
+      if (inQuotes) {
+        if (c === '"') {
+          if (src[i + 1] === '"') { field += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          field += c;
         }
+        continue;
       }
 
-      if (!best) {
-        // fallback: largest
-        const last = table.rows[table.rows.length - 1];
-        best = last?.[sizeHeader] ?? "—";
-        bestChest = null;
-      }
+      if (c === '"') { inQuotes = true; continue; }
+      if (c === ",") { pushField(); continue; }
+      if (c === "\n") { pushField(); pushRow(); continue; }
+      field += c;
+    }
+    pushField();
+    pushRow();
 
-      $("resultValue").textContent = best;
-      const meta = (state.lang === "JP")
-        ? `目標：${targetMin.toFixed(1)}〜${targetMax.toFixed(1)}${state.unit}（仕上がり胸囲） / 判定列：${chestHeader}`
-        : `Target: ${targetMin.toFixed(1)}–${targetMax.toFixed(1)} ${state.unit} (finished chest) / Using: ${chestHeader}`;
-      $("resultMeta").textContent = meta;
+    const headers = (rows[0] || []).map(h => String(h).trim());
+    const data = rows.slice(1).map(r => {
+      const obj = {};
+      headers.forEach((h, idx) => obj[h] = (r[idx] ?? "").trim());
+      return obj;
     });
-    area.appendChild(btn);
 
-    const meta = document.createElement("div");
-    meta.className = "miniNote";
-    meta.textContent = t.metaTop;
-    area.appendChild(meta);
+    return { headers, data };
+  }
 
-  } else if (product.category === "shoes") {
-    const t = TEXT[state.lang];
+  const norm = (s) => String(s || "")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[_-]/g, "")
+    .replace(/[()]/g, "");
 
-    const sizeHeader =
-      findHeader(table.headers, ["サイズ", "size", "us"]) ||
-      table.headers[0] || null;
+  const findHeader = (headers, candidates) => {
+    const hs = headers.map(h => ({ raw: h, n: norm(h) }));
+    for (const c of candidates) {
+      const cn = norm(c);
+      const hit = hs.find(x => x.n === cn);
+      if (hit) return hit.raw;
+    }
+    return null;
+  };
 
-    const footHeader =
-      findHeader(table.headers, ["足の長さ", "foot"]) ||
-      null;
+  // ---- number parsing --------------------------------------------------------
+  const FRACTIONS = new Map([
+    ["¼", 0.25], ["½", 0.5], ["¾", 0.75],
+    ["⅛", 0.125], ["⅜", 0.375], ["⅝", 0.625], ["⅞", 0.875],
+    ["⅓", 1/3], ["⅔", 2/3],
+  ]);
 
-    const outHeader =
-      findHeader(table.headers, ["アウトソール", "outsole"]) ||
-      null;
+  const toFloat = (v) => {
+    if (v == null) return NaN;
+    let s = String(v).trim();
+    if (!s) return NaN;
 
-    const row1 = document.createElement("div");
-    row1.className = "calc__row";
-    row1.innerHTML = `
-      <div class="field">
-        <label class="label">${t.foot} (${state.unit})</label>
-        <input id="inpFoot" class="input" inputmode="decimal" type="number" min="0" step="0.1" placeholder="${state.unit === "cm" ? "例: 24.3" : "e.g. 9.6"}">
-      </div>
+    // remove unit words
+    s = s.replace(/(cm|in|inch|inches)/gi, "").trim();
 
-      <div class="field">
-        <label class="label">${t.allowance} (${state.unit})</label>
-        <input id="inpAllow" class="input" inputmode="decimal" type="number" min="0" step="0.1" value="${state.unit === "cm" ? "1.0" : "0.4"}">
-        <div class="miniNote">${state.lang === "JP" ? "目安：0.7〜1.2cm（7〜12mm）" : "Typical: ~0.25–0.5 in"}</div>
-      </div>
-    `;
-    area.appendChild(row1);
+    // unicode fractions like "10½"
+    for (const [k, val] of FRACTIONS.entries()) {
+      if (s.includes(k)) {
+        s = s.replace(k, ` ${val}`);
+      }
+    }
+
+    // "9 1/4" or "91/4"
+    const mMixed = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+    if (mMixed) return Number(mMixed[1]) + Number(mMixed[2]) / Number(mMixed[3]);
+
+    const mJoined = s.match(/^(\d+)\s*(\d+)\s*\/\s*(\d+)$/);
+    if (mJoined) return Number(mJoined[1]) + Number(mJoined[2]) / Number(mJoined[3]);
+
+    const mFrac = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+    if (mFrac) return Number(mFrac[1]) / Number(mFrac[2]);
+
+    const mNum = s.match(/-?\d+(\.\d+)?/);
+    return mNum ? Number(mNum[0]) : NaN;
+  };
+
+  // ---- UI rendering ----------------------------------------------------------
+  function applyCopy() {
+    const t = COPY[state.locale];
+    $("#panelTitle").textContent = t.panelTitle;
+    $("#productLabel").textContent = t.productLabel;
+    $("#guideTitle").textContent = t.guideTitle;
+    $("#guideCap").textContent = t.guideCap;
+    $("#inputTitle").textContent = t.inputTitle;
+    $("#notesTitle").textContent = t.notesTitle;
+    $("#resultTitle").textContent = t.resultTitle;
+    $("#tableTitle").textContent = t.tableTitle;
+    $("#tableHint").textContent = t.tableHint;
+    $("#resultHint").textContent = t.resultHint;
+    $("#unitBadge").textContent = state.unit;
+
+    $("#langJP").setAttribute("aria-pressed", state.locale === "JP" ? "true" : "false");
+    $("#langEN").setAttribute("aria-pressed", state.locale === "EN" ? "true" : "false");
+  }
+
+  function renderProducts() {
+    const sel = $("#productSelect");
+    sel.innerHTML = "";
+    PRODUCTS.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = (state.locale === "JP") ? p.nameJP : p.nameEN;
+      sel.appendChild(opt);
+    });
+
+    if (!state.productId) state.productId = PRODUCTS[0]?.id || null;
+    sel.value = state.productId;
+  }
+
+  function currentProduct() {
+    return PRODUCTS.find(p => p.id === state.productId) || PRODUCTS[0];
+  }
+
+  function renderGuide() {
+    const p = currentProduct();
+    const img = $("#guideImg");
+    img.src = p.guideImage;
+
+    if (state.locale === "JP") {
+      img.alt = `採寸ガイド：${p.nameJP}`;
+    } else {
+      img.alt = `Measuring guide: ${p.nameEN}`;
+    }
+  }
+
+  function renderNotes() {
+    const p = currentProduct();
+    const t = COPY[state.locale];
+    const notes = t.notes[p.category] || [];
+    const area = $("#notesArea");
+    area.innerHTML = "";
+    notes.forEach(txt => {
+      const div = document.createElement("div");
+      div.className = "note";
+      div.textContent = txt;
+      area.appendChild(div);
+    });
+  }
+
+  function renderForm() {
+    const p = currentProduct();
+    const t = COPY[state.locale];
+    const area = $("#formArea");
+
+    const makeHelp = (text) => {
+      const div = document.createElement("div");
+      div.className = "help";
+      div.textContent = text;
+      return div;
+    };
+
+    area.innerHTML = "";
+
+    if (p.category === "shoes") {
+      const row = document.createElement("div");
+      row.className = "row";
+
+      const input = document.createElement("input");
+      input.className = "input";
+      input.type = "number";
+      input.inputMode = "decimal";
+      input.step = "0.1";
+      input.min = "0";
+      input.placeholder = (state.locale === "JP") ? "例: 23.5" : "e.g. 9.25";
+      input.id = "footInput";
+
+      const select = document.createElement("select");
+      select.className = "selectSmall";
+      select.id = "allowSelect";
+      (t.shoeAllow || []).forEach(o => {
+        const opt = document.createElement("option");
+        opt.value = o.value;
+        opt.textContent = o.label;
+        select.appendChild(opt);
+      });
+
+      const field1 = document.createElement("div");
+      field1.className = "field";
+      const l1 = document.createElement("div");
+      l1.className = "field__label";
+      l1.textContent = t.footLabel;
+      field1.appendChild(l1);
+      field1.appendChild(input);
+
+      const field2 = document.createElement("div");
+      field2.className = "field";
+      const l2 = document.createElement("div");
+      l2.className = "field__label";
+      l2.textContent = t.allowLabel;
+      field2.appendChild(l2);
+      field2.appendChild(select);
+
+      row.appendChild(field1);
+      row.appendChild(field2);
+
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.type = "button";
+      btn.textContent = t.calcBtn;
+      btn.addEventListener("click", () => calculateRecommendation());
+
+      area.appendChild(makeHelp(
+        state.locale === "JP"
+          ? "足長（かかと〜一番長い指）を入力 → 捨て寸を選択 → サイズ表と照合します。"
+          : "Enter foot length → choose allowance → we match it against the size table."
+      ));
+      area.appendChild(row);
+      area.appendChild(btn);
+      return;
+    }
+
+    // apparel (tshirt / hoodie)
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const input = document.createElement("input");
+    input.className = "input";
+    input.type = "number";
+    input.inputMode = "decimal";
+    input.step = "0.5";
+    input.min = "0";
+    input.placeholder = (state.locale === "JP") ? "例: 88" : "e.g. 38";
+    input.id = "chestInput";
+
+    const select = document.createElement("select");
+    select.className = "selectSmall";
+    select.id = "easeSelect";
+    (t.easeOptions || []).forEach(o => {
+      const opt = document.createElement("option");
+      opt.value = o.value;
+      opt.textContent = o.label;
+      select.appendChild(opt);
+    });
+
+    const field1 = document.createElement("div");
+    field1.className = "field";
+    const l1 = document.createElement("div");
+    l1.className = "field__label";
+    l1.textContent = t.chestLabel;
+    field1.appendChild(l1);
+    field1.appendChild(input);
+
+    const field2 = document.createElement("div");
+    field2.className = "field";
+    const l2 = document.createElement("div");
+    l2.className = "field__label";
+    l2.textContent = t.easeLabel;
+    field2.appendChild(l2);
+    field2.appendChild(select);
+
+    row.appendChild(field1);
+    row.appendChild(field2);
 
     const btn = document.createElement("button");
     btn.className = "btn";
     btn.type = "button";
     btn.textContent = t.calcBtn;
-    btn.addEventListener("click", () => {
-      const foot = parseFloat($("inpFoot").value);
-      const allow = parseFloat($("inpAllow").value);
-      if (!foot || foot <= 0 || !Number.isFinite(allow)) {
-        $("resultValue").textContent = state.lang === "JP" ? "足長と捨て寸を入力してください" : "Enter foot length and allowance";
-        $("resultMeta").textContent = "";
-        return;
-      }
+    btn.addEventListener("click", () => calculateRecommendation());
 
-      const target = foot + allow;
-
-      // choose smallest row where Foot length >= target
-      let bestRow = null;
-
-      // If we have a Foot length column, use it; otherwise, do nothing
-      if (!footHeader) {
-        $("resultValue").textContent = state.lang === "JP" ? "Foot length 列が見つかりません" : "Foot length column not found";
-        $("resultMeta").textContent = "";
-        return;
-      }
-
-      for (const r of table.rows) {
-        const fl = toNumber(r[footHeader]);
-        if (!Number.isFinite(fl)) continue;
-        if (fl >= target) { bestRow = r; break; }
-      }
-      if (!bestRow) bestRow = table.rows[table.rows.length - 1];
-
-      const size = bestRow?.[sizeHeader] ?? "—";
-      $("resultValue").textContent = size;
-
-      const metaParts = [];
-      metaParts.push((state.lang === "JP")
-        ? `目標足長：${target.toFixed(1)}${state.unit}（足長＋捨て寸）`
-        : `Target: ${target.toFixed(1)} ${state.unit} (foot + allowance)`
-      );
-
-      if (outHeader) {
-        metaParts.push((state.lang === "JP")
-          ? `参考：アウトソール=${bestRow[outHeader]}`
-          : `Ref: outsole=${bestRow[outHeader]}`
-        );
-      }
-      $("resultMeta").textContent = metaParts.join(" / ");
-    });
+    area.appendChild(makeHelp(
+      state.locale === "JP"
+        ? "胸囲（ヌード）＋ゆとり → 仕上がり胸囲 → 身幅（平置き）×2 と照合しておすすめを出します。"
+        : "Nude chest + ease → target garment chest → we match it against (flat chest width × 2)."
+    ));
+    area.appendChild(row);
     area.appendChild(btn);
-
-    const meta = document.createElement("div");
-    meta.className = "miniNote";
-    meta.textContent = t.metaShoe;
-    area.appendChild(meta);
   }
-}
 
-async function loadCSV(url) {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`CSV load failed: ${res.status}`);
-  const text = await res.text();
-  return parseCSV(text);
-}
+  // ---- Table ----------------------------------------------------------------
+  function renderTable(headers, rows) {
+    const thead = $("#tableHead");
+    const tbody = $("#tableBody");
+    thead.innerHTML = "";
+    tbody.innerHTML = "";
 
-async function loadProduct(key) {
-  state.productKey = key;
-  const product = getProduct(key);
+    // Header
+    const trh = document.createElement("tr");
+    headers.forEach(h => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
 
-  // Guide image + tips
-  setGuideImage(product);
-  setTips(product);
-
-  // Load CSV
-  const url = csvPathFor(product);
-
-  try {
-    const table = await loadCSV(url);
-    state.table = table;
-    renderTable(table);
-    renderCalculator(product, table);
-  } catch (e) {
-    state.table = null;
-    $("tableArea").innerHTML = `<div class="error">
-      ${state.lang === "JP" ? "CSVの読み込みに失敗しました：" : "Failed to load CSV: "}
-      <code>${escapeHtml(String(e.message || e))}</code>
-      <div class="miniNote">${state.lang === "JP"
-        ? `パス確認：${url}`
-        : `Check path: ${url}`
-      }</div>
-    </div>`;
-    $("calcArea").innerHTML = "";
-    $("resultValue").textContent = TEXT[state.lang].resultNone;
-    $("resultMeta").textContent = "";
+    // Body
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      headers.forEach(h => {
+        const td = document.createElement("td");
+        td.textContent = r[h] ?? "";
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
   }
-}
 
-function escapeHtml(s) {
-  return s.replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[c]));
-}
+  async function loadCSVForCurrent() {
+    const p = currentProduct();
+    const path = p.csv[state.unit];
+    $("#resultArea").innerHTML = `<div class="muted" id="resultHint">${COPY[state.locale].resultHint}</div>`;
 
-/* -------- init -------- */
-document.addEventListener("DOMContentLoaded", () => {
-  $("year").textContent = String(new Date().getFullYear());
+    try {
+      const res = await fetch(path, { cache: "no-store" });
+      if (!res.ok) throw new Error(`Failed to fetch CSV: ${res.status}`);
+      const text = await res.text();
+      const { headers, data } = parseCSV(text);
 
-  // default
-  applyText();
+      state.csvHeaders = headers;
+      state.csvRows = data;
 
-  $("langJP").addEventListener("click", () => setLang("JP"));
-  $("langEN").addEventListener("click", () => setLang("EN"));
+      renderTable(headers, data);
+    } catch (e) {
+      state.csvHeaders = [];
+      state.csvRows = [];
+      renderTable(["Error"], [{ "Error": String(e.message || e) }]);
+    }
+  }
 
-  $("productSelect").addEventListener("change", (e) => {
-    loadProduct(e.target.value);
-  });
+  // ---- Recommendation --------------------------------------------------------
+  function calculateRecommendation() {
+    const p = currentProduct();
+    const t = COPY[state.locale];
 
-  // initial load
-  loadProduct(state.productKey);
-});
+    if (!state.csvHeaders.length || !state.csvRows.length) {
+      $("#resultArea").innerHTML = `<div class="muted">${t.recNone}</div>`;
+      return;
+    }
+
+    if (p.category === "shoes") {
+      const foot = toFloat($("#footInput")?.value);
+      const allow = toFloat($("#allowSelect")?.value);
+
+      if (!Number.isFinite(foot) || foot <= 0) {
+        $("#resultArea").innerHTML = `<div class="muted">${state.locale === "JP" ? "足長を入力してください。" : "Please enter foot length."}</div>`;
+        return;
+      }
+      const target = foot + (Number.isFinite(allow) ? allow : 0);
+
+      // Find column keys
+      const sizeKey =
+        findHeader(state.csvHeaders, ["サイズ", "size", "US"]) || state.csvHeaders[0];
+
+      const footKey =
+        findHeader(state.csvHeaders, ["足の長さ", "足長", "Foot length", "foot length", "leg length"]) ||
+        findHeader(state.csvHeaders, ["footlength", "leglength"]);
+
+      if (!footKey) {
+        $("#resultArea").innerHTML = `<div class="muted">${t.recNone}</div>`;
+        return;
+      }
+
+      const scored = state.csvRows
+        .map((r, idx) => {
+          const v = toFloat(r[footKey]);
+          return { idx, v, size: r[sizeKey] };
+        })
+        .filter(x => Number.isFinite(x.v))
+        .sort((a, b) => a.v - b.v);
+
+      let pick = scored.find(x => x.v >= target) || scored[scored.length - 1];
+      const pickRow = state.csvRows[pick.idx];
+
+      const outsoleKey = findHeader(state.csvHeaders, ["アウトソールの長さ", "Outsole length", "outsole length"]);
+      const outsole = outsoleKey ? pickRow[outsoleKey] : "";
+
+      const next = scored.find(x => x.v > pick.v);
+      const nextText = next ? ` / ${state.locale === "JP" ? "迷ったら一つ上" : "If unsure, size up"}: ${next.size}` : "";
+
+      $("#resultArea").innerHTML = `
+        <div class="result__big">${t.recTitle}: ${pick.size}${nextText}</div>
+        <div class="result__sub">
+          ${state.locale === "JP"
+            ? `入力: 足長 ${foot}${state.unit} / 目安+${allow || 0}${state.unit} → 目標 ${target.toFixed(2)}${state.unit}`
+            : `Input: foot ${foot}${state.unit} / +${allow || 0}${state.unit} → target ${target.toFixed(2)}${state.unit}`
+          }<br>
+          ${state.locale === "JP"
+            ? `サイズ表の「${footKey}」で照合しています。アウトソールは外寸（参考）${outsole ? `：${outsole}` : ""}`
+            : `Matched against “${footKey}”. Outsole is outer measurement (reference)${outsole ? `: ${outsole}` : ""}`
+          }
+        </div>
+      `;
+      return;
+    }
+
+    // Apparel
+    const chest = toFloat($("#chestInput")?.value);
+    const ease = toFloat($("#easeSelect")?.value);
+
+    if (!Number.isFinite(chest) || chest <= 0) {
+      $("#resultArea").innerHTML = `<div class="muted">${state.locale === "JP" ? "胸囲を入力してください。" : "Please enter nude chest."}</div>`;
+      return;
+    }
+
+    const targetGarmentChest = chest + (Number.isFinite(ease) ? ease : 0);
+
+    // find keys
+    const sizeKey = findHeader(state.csvHeaders, ["サイズ", "Size", "size"]) || state.csvHeaders[0];
+
+    // chest width (flat)
+    const chestFlatKey =
+      findHeader(state.csvHeaders, ["身幅（平置き）", "身幅", "Chest (flat)", "Chest flat", "Chest width", "chest width", "Chest"]) ||
+      findHeader(state.csvHeaders, ["halfchest", "half chest", "halfc", "1/2 chest", "half chest width", "Half Chest Width"]);
+
+    if (!chestFlatKey) {
+      $("#resultArea").innerHTML = `<div class="muted">${t.recNone}</div>`;
+      return;
+    }
+
+    const scored = state.csvRows
+      .map((r, idx) => {
+        const flat = toFloat(r[chestFlatKey]);
+        const garment = Number.isFinite(flat) ? flat * 2 : NaN;
+        return { idx, flat, garment, size: r[sizeKey] };
+      })
+      .filter(x => Number.isFinite(x.garment))
+      .sort((a, b) => a.garment - b.garment);
+
+    let pick = scored.find(x => x.garment >= targetGarmentChest) || scored[scored.length - 1];
+    const pickIdxInSorted = scored.findIndex(x => x.idx === pick.idx);
+    const next = scored[pickIdxInSorted + 1];
+
+    const nextText = next
+      ? ` / ${state.locale === "JP" ? "ゆったりなら" : "Size up (roomier)"}: ${next.size}`
+      : "";
+
+    $("#resultArea").innerHTML = `
+      <div class="result__big">${t.recTitle}: ${pick.size}${nextText}</div>
+      <div class="result__sub">
+        ${state.locale === "JP"
+          ? `入力: 胸囲 ${chest}${state.unit} / ゆとり +${ease || 0}${state.unit} → 目標仕上がり胸囲 ${targetGarmentChest.toFixed(1)}${state.unit}`
+          : `Input: chest ${chest}${state.unit} / +${ease || 0}${state.unit} → target garment chest ${targetGarmentChest.toFixed(1)}${state.unit}`
+        }<br>
+        ${state.locale === "JP"
+          ? `サイズ表の「${chestFlatKey}」×2（仕上がり胸囲）で照合しています。`
+          : `Matched using “${chestFlatKey} × 2” as garment chest.`
+        }
+      </div>
+    `;
+  }
+
+  // ---- Language toggle -------------------------------------------------------
+  function setLocale(locale) {
+    state.locale = locale;
+    setUnitFromLocale();
+    applyCopy();
+    renderProducts();
+    renderGuide();
+    renderNotes();
+    renderForm();
+    loadCSVForCurrent();
+  }
+
+  function setProduct(id) {
+    state.productId = id;
+    renderGuide();
+    renderNotes();
+    renderForm();
+    loadCSVForCurrent();
+  }
+
+  // ---- Init -----------------------------------------------------------------
+  function init() {
+    setUnitFromLocale();
+    applyCopy();
+    renderProducts();
+    renderGuide();
+    renderNotes();
+    renderForm();
+
+    // events
+    $("#langJP").addEventListener("click", () => setLocale("JP"));
+    $("#langEN").addEventListener("click", () => setLocale("EN"));
+    $("#productSelect").addEventListener("change", (e) => setProduct(e.target.value));
+
+    // footer year
+    $("#year").textContent = String(new Date().getFullYear());
+
+    // default product
+    state.productId = $("#productSelect").value;
+    loadCSVForCurrent();
+  }
+
+  init();
+})();
