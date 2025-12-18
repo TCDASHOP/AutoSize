@@ -10,14 +10,15 @@
 </head>
 
 <body>
+  <!-- Header (brand + language only / 迷わせない) -->
   <header class="header">
-    <div class="container">
+    <div class="container header__inner">
       <div class="brand">
         <div class="brand__title">Transcend Color Digital Apparel</div>
         <div class="brand__subtitle">Size Guide</div>
       </div>
 
-      <div class="lang">
+      <div class="lang" aria-label="language">
         <button id="langJP" class="seg is-active" type="button" aria-pressed="true">JP</button>
         <button id="langEN" class="seg" type="button" aria-pressed="false">EN</button>
       </div>
@@ -25,25 +26,40 @@
   </header>
 
   <main class="container">
-    <section class="hero">
-      <h1 class="hero__headline">Wear art. Release your senses.</h1>
-      <p class="hero__lead">Art you don’t hang. You wear.</p>
+    <!-- Step bar: 操作の順番を固定（迷いを減らす） -->
+    <section class="steps" aria-label="steps">
+      <div class="steps__title">Size Guide</div>
+      <ol class="steps__list">
+        <li><span class="steps__num">1</span><span class="steps__txt">JP / EN を選択</span></li>
+        <li><span class="steps__num">2</span><span class="steps__txt">商品を選択</span></li>
+        <li><span class="steps__num">3</span><span class="steps__txt">入力（任意）→ おすすめ</span></li>
+        <li><span class="steps__num">4</span><span class="steps__txt">サイズ表で最終確認</span></li>
+      </ol>
+      <div class="steps__note">
+        JP = cm ／ EN = inch（自動切替）
+      </div>
     </section>
 
     <section class="panel">
-      <div class="panel__top">
-        <div class="field">
-          <label id="productLabel" class="label" for="productSelect">商品</label>
-          <select id="productSelect" class="select" aria-label="product"></select>
+      <!-- Controls: ここが最重要。大きく・わかりやすく -->
+      <div class="controls">
+        <div class="controls__left">
+          <div class="field field--wide">
+            <label id="productLabel" class="label" for="productSelect">商品</label>
+            <select id="productSelect" class="select select--big" aria-label="product"></select>
+          </div>
         </div>
 
-        <div class="unitPill">
-          <span id="unitLabel" class="unitPill__label">単位</span>
-          <span id="unitValue" class="unitPill__value">cm</span>
+        <div class="controls__right">
+          <div class="unitPill" aria-label="unit">
+            <span id="unitLabel" class="unitPill__label">単位</span>
+            <span id="unitValue" class="unitPill__value">cm</span>
+          </div>
         </div>
       </div>
 
       <div class="grid">
+        <!-- LEFT: guide + tips（“今何を見ているか”が明確） -->
         <section class="card">
           <div class="card__head">
             <h2 id="guideTitle" class="card__title">採寸ガイド</h2>
@@ -53,9 +69,7 @@
             <div class="guide__imageWrap">
               <img id="guideImage" class="guide__image" src="./assets/guide_tshirt.jpg" alt="Guide" loading="lazy" />
             </div>
-            <div id="imgNote" class="note">
-              ※ 画像は商品に応じて切り替わります
-            </div>
+            <div id="imgNote" class="note">※ 画像は商品に応じて切り替わります</div>
           </div>
 
           <div class="divider"></div>
@@ -66,6 +80,7 @@
           </div>
         </section>
 
+        <!-- RIGHT: calculator（任意入力。表の理解を補助） -->
         <section class="card">
           <div class="card__head">
             <h2 id="calcTitle" class="card__title">サイズ目安（入力）</h2>
@@ -83,11 +98,12 @@
         </section>
       </div>
 
+      <!-- 最終判断は表。見やすさ最優先 -->
       <section class="tableWrap">
         <div class="tableHeader">
           <h2 id="tableTitle" class="tableHeader__title">サイズ表</h2>
+          <div class="tableHeader__hint">左右にスクロールできます</div>
         </div>
-
         <div id="tableArea" class="table"></div>
       </section>
     </section>
