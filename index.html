@@ -2,98 +2,97 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="color-scheme" content="dark" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TCDA Size Guide</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 
 <body>
-  <header class="site-header">
-    <div class="header-left">
-      <div class="brand-title">Transcend Color Digital Apparel</div>
-      <div class="brand-subtitle">Size Guide</div>
+  <header class="topbar">
+    <div class="topbar__left">
+      <div class="brand">
+        <div class="brand__name">Transcend Color Digital Apparel</div>
+        <div class="brand__sub">Size Guide</div>
+      </div>
     </div>
 
-    <div class="header-right">
-      <div class="lang-toggle" role="group" aria-label="Language">
-        <button type="button" class="chip" data-lang="jp" aria-pressed="true">JP</button>
-        <button type="button" class="chip" data-lang="en" aria-pressed="false">EN</button>
+    <div class="topbar__right">
+      <div class="pillgroup" role="group" aria-label="Language">
+        <button class="pill" id="langJP" type="button">JP</button>
+        <button class="pill" id="langEN" type="button">EN</button>
       </div>
 
-      <a class="chip chip-link" id="backToShop" href="https://www.tcda.shop/" rel="noopener">ショップに戻る</a>
+      <div class="pillgroup" role="group" aria-label="Unit">
+        <span class="pill pill--static" id="unitBadge">cm</span>
+      </div>
+
+      <a class="pill pill--link" id="backToShopBtn" href="https://www.tcda.shop/" target="_self" rel="noopener">
+        ショップに戻る
+      </a>
     </div>
   </header>
 
-  <main class="wrap">
+  <main class="container">
     <section class="grid">
-      <!-- Guide -->
-      <article class="card">
-        <h2 class="card-title" id="guideTitle">採寸ガイド</h2>
-        <p class="card-note" id="guideNote">※画像は商品に応じて切り替わります</p>
-        <div class="guide-frame">
-          <img id="guideImage" src="assets/guide_tshirt.jpg" alt="Size guide image" loading="eager" />
+      <article class="card card--guide">
+        <div class="card__title" data-i18n="guide_title">採寸ガイド</div>
+        <div class="card__note" data-i18n="guide_note">※画像は商品に応じて切り替わります</div>
+
+        <div class="guideFrame">
+          <img id="guideImg" class="guideImg" src="./assets/guide_tshirt.jpg" alt="Size guide image" />
         </div>
-        <!-- ★削除：A：身幅／B：着丈／C：袖丈 などのテキストは入れない -->
+        <!-- ここにA/B/Cのテキストは置かない（要望どおり削除） -->
       </article>
 
-      <!-- Calculator -->
-      <article class="card">
-        <h2 class="card-title" id="calcTitle">サイズ算出（任意入力）</h2>
-        <p class="card-note" id="calcNote">入力しなくてもサイズ表だけ見て選べます</p>
+      <article class="card card--calc">
+        <div class="card__title" data-i18n="calc_title">サイズ算出（任意入力）</div>
+        <div class="card__note" data-i18n="calc_note">入力しなくてもサイズ表だけ見て選べます</div>
 
         <div class="form">
-          <label class="field">
-            <span class="label" id="productLabel">商品</span>
-            <select id="productSelect"></select>
-          </label>
+          <label class="label" for="productSelect" data-i18n="product_label">商品</label>
+          <select id="productSelect" class="select"></select>
 
-          <div id="inputsArea"></div>
-
-          <button class="primary" id="calcBtn" type="button">おすすめサイズを計算</button>
-
-          <div class="hint" id="tipsBox"></div>
-
-          <div class="result">
-            <div class="result-label" id="recommendLabel">おすすめ</div>
-            <div class="result-value" id="recommendValue">—</div>
-            <div class="result-actions">
-              <button class="ghost" id="resetBtn" type="button">入力を見直す</button>
-              <button class="ghost" id="scrollTableBtn" type="button">サイズ表で選ぶ</button>
-            </div>
+          <div id="measureBlock">
+            <label class="label" id="measureLabel" for="measureInput">ヌード胸囲（cm）</label>
+            <input id="measureInput" class="input" inputmode="decimal" placeholder="例：88" />
           </div>
 
-          <div class="error" id="errorBox" hidden></div>
+          <div id="allowanceBlock">
+            <label class="label" id="allowanceLabel" for="allowanceSelect">ゆとり（目安）</label>
+            <select id="allowanceSelect" class="select"></select>
+          </div>
+
+          <button id="calcBtn" class="btn" type="button" data-i18n="calc_btn">おすすめサイズを計算</button>
+
+          <div class="infoBox">
+            <div class="infoBox__title" data-i18n="tips_title">選ぶときの注意事項</div>
+            <ul class="infoBox__list" id="tipsList"></ul>
+          </div>
+
+          <div class="resultBox">
+            <div class="resultBox__title" data-i18n="result_title">おすすめ</div>
+            <div class="resultBox__value" id="resultText">—</div>
+            <div class="resultBox__hint" id="resultHint"></div>
+          </div>
         </div>
       </article>
     </section>
 
-    <!-- Table -->
-    <section class="card card-table" id="tableCard">
-      <div class="table-head">
-        <h2 class="card-title" id="tableTitle">サイズ表</h2>
-        <!-- ★削除：Download CSV ボタンは出さない -->
-        <div class="unit-badge" id="unitBadge">cm</div>
+    <section class="card">
+      <div class="card__title" data-i18n="table_title">サイズ表</div>
+      <div class="tableWrap">
+        <table class="table" id="sizeTable"></table>
       </div>
-
-      <div class="table-wrap">
-        <table class="table" id="sizeTable" aria-label="Size table">
-          <thead id="tableHead"></thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-
-      <p class="table-note" id="tableNote">数値は平置き採寸です（誤差 ±1〜2）</p>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <img class="footer-logo" src="assets/tcda-logo.png" alt="TCDA" loading="lazy" />
-      <div class="footer-copy">© 2025 Transcend Color Digital Apparel</div>
+  <footer class="footer">
+    <div class="footer__inner">
+      <img class="footer__logo" src="./assets/tcda-logo.png" alt="TCDA Logo" />
+      <div class="footer__copy">© 2025 Transcend Color Digital Apparel</div>
     </div>
   </footer>
 
-  <script src="app.js" defer></script>
+  <script src="./app.js"></script>
 </body>
 </html
