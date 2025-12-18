@@ -3,87 +3,97 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
   <title>TCDA Size Guide</title>
-  <link rel="stylesheet" href="./styles.css?v=20251219_1" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-  <header class="site-header" role="banner">
+  <header class="site-header">
     <div class="header-left">
       <div class="brand-title">Transcend Color Digital Apparel</div>
-      <div class="brand-sub">Size Guide</div>
+      <div class="brand-subtitle">Size Guide</div>
     </div>
 
-    <nav class="header-right" aria-label="controls">
-      <div class="seg">
-        <button class="seg-btn is-active" data-lang="jp" type="button">JP</button>
-        <button class="seg-btn" data-lang="en" type="button">EN</button>
+    <div class="header-right">
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" class="chip" data-lang="jp" aria-pressed="true">JP</button>
+        <button type="button" class="chip" data-lang="en" aria-pressed="false">EN</button>
       </div>
 
-      <div class="seg">
-        <button class="seg-btn is-active" data-unit="cm" type="button">cm</button>
-        <button class="seg-btn" data-unit="inch" type="button">inch</button>
-      </div>
-
-      <a class="back-link" href="https://www.tcda.shop/" rel="noopener">ショップに戻る</a>
-    </nav>
+      <a class="chip chip-link" id="backToShop" href="https://www.tcda.shop/" rel="noopener">ショップに戻る</a>
+    </div>
   </header>
 
-  <main class="wrap" role="main">
+  <main class="wrap">
     <section class="grid">
       <!-- Guide -->
       <article class="card">
-        <h2 class="card-title" data-i18n="guideTitle">採寸ガイド</h2>
-        <p class="card-note" data-i18n="guideNote">※画像は商品に応じて切り替わります</p>
-        <div class="guide">
-          <img id="guideImage" class="guide-img" src="./assets/guide_tshirt.jpg" alt="Size guide" />
+        <h2 class="card-title" id="guideTitle">採寸ガイド</h2>
+        <p class="card-note" id="guideNote">※画像は商品に応じて切り替わります</p>
+        <div class="guide-frame">
+          <img id="guideImage" src="assets/guide_tshirt.jpg" alt="Size guide image" loading="eager" />
         </div>
+        <!-- ★削除：A：身幅／B：着丈／C：袖丈 などのテキストは入れない -->
       </article>
 
       <!-- Calculator -->
-      <article class="card" id="calcCard">
-        <h2 class="card-title" data-i18n="calcTitle">サイズ算出（任意入力）</h2>
-        <p class="card-note" data-i18n="calcNote">入力なしでもサイズ表だけ見て選べます</p>
+      <article class="card">
+        <h2 class="card-title" id="calcTitle">サイズ算出（任意入力）</h2>
+        <p class="card-note" id="calcNote">入力しなくてもサイズ表だけ見て選べます</p>
 
-        <label class="label" for="productSelect" data-i18n="productLabel">商品</label>
-        <select id="productSelect" class="select"></select>
+        <div class="form">
+          <label class="field">
+            <span class="label" id="productLabel">商品</span>
+            <select id="productSelect"></select>
+          </label>
 
-        <div id="inputArea"></div>
+          <div id="inputsArea"></div>
 
-        <button id="calcBtn" class="btn" type="button" data-i18n="calcBtn">おすすめサイズを計算</button>
+          <button class="primary" id="calcBtn" type="button">おすすめサイズを計算</button>
 
-        <div class="notice" id="noticeBox" aria-live="polite"></div>
+          <div class="hint" id="tipsBox"></div>
 
-        <div class="recommend">
-          <div class="label" data-i18n="recommendLabel">おすすめ</div>
-          <div id="recommendValue" class="recommend-value">—</div>
-        </div>
+          <div class="result">
+            <div class="result-label" id="recommendLabel">おすすめ</div>
+            <div class="result-value" id="recommendValue">—</div>
+            <div class="result-actions">
+              <button class="ghost" id="resetBtn" type="button">入力を見直す</button>
+              <button class="ghost" id="scrollTableBtn" type="button">サイズ表で選ぶ</button>
+            </div>
+          </div>
 
-        <div class="mini-actions">
-          <button id="resetBtn" class="btn btn-ghost" type="button" data-i18n="resetBtn">入力を見直す</button>
-          <button id="pickFromTableBtn" class="btn btn-ghost" type="button" data-i18n="pickBtn">サイズ表で選ぶ</button>
+          <div class="error" id="errorBox" hidden></div>
         </div>
       </article>
     </section>
 
     <!-- Table -->
-    <section class="card table-card" id="tableCard">
+    <section class="card card-table" id="tableCard">
       <div class="table-head">
-        <h2 class="card-title" data-i18n="tableTitle">サイズ表</h2>
-        <div class="table-note" data-i18n="tableNote">数値は平置き採寸です（誤差 ±1〜2）</div>
+        <h2 class="card-title" id="tableTitle">サイズ表</h2>
+        <!-- ★削除：Download CSV ボタンは出さない -->
+        <div class="unit-badge" id="unitBadge">cm</div>
       </div>
 
       <div class="table-wrap">
-        <table class="table" id="sizeTable"></table>
+        <table class="table" id="sizeTable" aria-label="Size table">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
       </div>
+
+      <p class="table-note" id="tableNote">数値は平置き採寸です（誤差 ±1〜2）</p>
     </section>
   </main>
 
-  <footer class="site-footer" role="contentinfo">
-    <img class="footer-logo" src="./assets/tcda-logo.png" alt="TCDA logo" />
-    <div class="footer-copy">© 2025 Transcend Color Digital Apparel</div>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <img class="footer-logo" src="assets/tcda-logo.png" alt="TCDA" loading="lazy" />
+      <div class="footer-copy">© 2025 Transcend Color Digital Apparel</div>
+    </div>
   </footer>
 
-  <script src="./app.js?v=20251219_1" defer></script>
+  <script src="app.js" defer></script>
 </body>
-</html>
+</html
