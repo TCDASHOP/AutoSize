@@ -1,12 +1,9 @@
 :root{
   --bg:#07090c;
-  --card:#0e1117;
-  --card2:#0b0f14;
   --text:#e8ecf3;
   --muted:#a9b2c3;
   --line:rgba(255,255,255,.10);
   --line2:rgba(255,255,255,.14);
-  --accent:rgba(255,255,255,.16);
   --shadow: 0 18px 60px rgba(0,0,0,.45);
   --r:18px;
   --pad:18px;
@@ -40,18 +37,11 @@ body{
   border-bottom: 1px solid var(--line);
 }
 
-.brandName{
-  font-weight: 800;
-  letter-spacing: .2px;
-  font-size: 16px;
-}
-.brandSub{
-  margin-top:2px;
-  font-size: 12px;
-  color: var(--muted);
-}
+.brandName{ font-weight: 900; letter-spacing: .2px; font-size: 16px; }
+.brandSub{ margin-top:2px; font-size: 12px; color: var(--muted); }
 
-.topControls{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.topControls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+
 .toggleGroup{
   display:flex;
   border:1px solid var(--line);
@@ -65,12 +55,23 @@ body{
   background: transparent;
   color: var(--muted);
   padding: 8px 12px;
-  font-weight: 700;
+  font-weight: 800;
   cursor:pointer;
 }
 .toggleBtn.active{
   background: rgba(255,255,255,.12);
   color: var(--text);
+}
+
+.unitPill{
+  border:1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 900;
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  white-space: nowrap;
 }
 
 .container{
@@ -101,35 +102,11 @@ body{
   gap: 12px;
   margin-bottom: 12px;
 }
-.cardTitle{
-  font-weight: 900;
-  font-size: 16px;
-}
-.cardHint{
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.unitBadge{
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.06);
-  padding: 7px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-  color: var(--text);
-  white-space: nowrap;
-}
+.cardTitle{ font-weight: 950; font-size: 16px; }
+.cardHint{ margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.4; }
 
 .field{ margin: 12px 0; }
-.label{
-  display:block;
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 8px;
-}
+.label{ display:block; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
 
 .combo{ position:relative; }
 .comboButton{
@@ -148,9 +125,9 @@ body{
 }
 .comboButton:focus{ outline: 2px solid rgba(140,200,255,.25); outline-offset: 2px; }
 
-.comboText{ display:flex; flex-direction:column; gap:2px; }
-.comboLine1{ font-weight: 900; font-size: 14px; line-height: 1.15; }
-.comboLine2{ font-weight: 700; font-size: 12px; color: var(--muted); line-height: 1.2; }
+.comboText{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.comboLine1{ font-weight: 950; font-size: 14px; line-height: 1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.comboLine2{ font-weight: 800; font-size: 12px; color: var(--muted); line-height: 1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .comboChevron{ color: var(--muted); font-weight:900; }
 
 .comboList{
@@ -192,16 +169,7 @@ body{
   .inputRow{ grid-template-columns: 1fr; }
 }
 
-.input{
-  width:100%;
-  padding: 12px 12px;
-  border-radius: 14px;
-  background: rgba(255,255,255,.03);
-  border: 1px solid var(--line);
-  color: var(--text);
-  font-size: 14px;
-}
-.select{
+.input, .select{
   width:100%;
   padding: 12px 12px;
   border-radius: 14px;
@@ -219,7 +187,7 @@ body{
   border: 1px solid rgba(255,255,255,.14);
   background: rgba(255,255,255,.08);
   color: var(--text);
-  font-weight: 900;
+  font-weight: 950;
   cursor:pointer;
 }
 .primaryBtn:hover{ background: rgba(255,255,255,.12); }
@@ -227,7 +195,7 @@ body{
 .sectionTitle{
   margin-top: 14px;
   margin-bottom: 8px;
-  font-weight: 900;
+  font-weight: 950;
   font-size: 14px;
 }
 
@@ -241,8 +209,7 @@ body{
   line-height: 1.55;
 }
 .noticeBox ul{ margin:0; padding-left: 18px; }
-.noticeBox li{ margin: 6px 0; color: var(--text); }
-.noticeBox .muted{ color: var(--muted); }
+.noticeBox li{ margin: 6px 0; }
 
 .resultBox{
   border: 1px solid var(--line);
@@ -251,23 +218,9 @@ body{
   padding: 12px 12px;
   min-height: 56px;
 }
-
-.resultSize{
-  font-weight: 950;
-  font-size: 20px;
-}
-.resultMeta{
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.5;
-}
-.resultActions{
-  margin-top: 12px;
-  display:flex;
-  gap: 10px;
-  flex-wrap:wrap;
-}
+.resultSize{ font-weight: 1000; font-size: 20px; }
+.resultMeta{ margin-top: 8px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.resultActions{ margin-top: 12px; display:flex; gap: 10px; flex-wrap:wrap; }
 
 .btnMini{
   border: 1px solid var(--line);
@@ -276,7 +229,7 @@ body{
   padding: 10px 12px;
   border-radius: 12px;
   cursor:pointer;
-  font-weight: 800;
+  font-weight: 900;
 }
 .btnMini:hover{ background: rgba(255,255,255,.10); }
 
@@ -300,11 +253,7 @@ body{
   border: 1px solid var(--line);
   background: #cfcfcf;
 }
-.imgNote{
-  margin-top: 8px;
-  color: var(--muted);
-  font-size: 12px;
-}
+.imgNote{ margin-top: 8px; color: var(--muted); font-size: 12px; }
 .imgFallback{
   margin-top: 10px;
   padding: 10px 12px;
@@ -320,6 +269,7 @@ body{
   border-radius: 14px;
   border: 1px solid var(--line);
   background: rgba(255,255,255,.02);
+  scroll-behavior: smooth;
 }
 .table{ width:100%; border-collapse: collapse; min-width: 640px; }
 .table th, .table td{
@@ -334,10 +284,16 @@ body{
   z-index: 1;
   background: rgba(9,12,16,.95);
   backdrop-filter: blur(10px);
-  font-weight: 900;
+  font-weight: 950;
 }
-.table td{ color: var(--text); }
-.table tr:hover td{ background: rgba(255,255,255,.04); }
+
+/* === Highlight after recommendation === */
+.table tr.hitRow td{ background: rgba(140,200,255,.12) !important; }
+.table tr.hitRow{
+  outline: 2px solid rgba(140,200,255,.25);
+  outline-offset: -2px;
+}
+.table tr.hitRow td:first-child{ font-weight: 1000; }
 
 .footer{
   padding: 20px 16px 28px;
