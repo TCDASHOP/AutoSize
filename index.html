@@ -3,86 +3,143 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="color-scheme" content="dark light" />
-  <title>TCDA Size Guide</title>
+  <title>Transcend Color Digital Apparel | Size Guide</title>
+  <meta name="description" content="TCDA Size Guide - Choose your size with clarity." />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand__title">Transcend Color Digital Apparel</div>
-      <div class="brand__sub">Size Guide</div>
-    </div>
+  <header class="header">
+    <div class="header__inner">
+      <div class="brand">
+        <div class="brand__name">Transcend Color Digital Apparel</div>
+        <div class="brand__sub">Size Guide</div>
+      </div>
 
-    <div class="lang">
-      <button type="button" class="seg" id="langJP" aria-pressed="true">JP</button>
-      <button type="button" class="seg" id="langEN" aria-pressed="false">EN</button>
+      <div class="lang">
+        <button id="langJP" class="pill is-active" type="button">JP</button>
+        <button id="langEN" class="pill" type="button">EN</button>
+      </div>
     </div>
   </header>
 
   <main class="wrap">
     <section class="panel">
       <div class="panel__head">
-        <div class="panel__title" id="pageTitle">サイズガイド</div>
-        <div class="unitBadge" id="unitBadge">単位：cm</div>
-      </div>
-
-      <!-- 入口：商品選択 -->
-      <div class="bar">
-        <label class="bar__label" for="productSelect" id="labelProduct">商品</label>
-        <select id="productSelect" class="select"></select>
+        <h1 id="pageTitle">サイズガイド</h1>
+        <div class="unitBadge">
+          <span id="unitLabel">単位</span>
+          <span id="unitValue" class="unitValue">cm</span>
+        </div>
       </div>
 
       <div class="grid">
-        <!-- 左：採寸ガイド -->
+        <!-- Left: Guide -->
         <section class="card">
           <div class="card__head">
-            <div class="card__title" id="titleGuide">採寸ガイド</div>
+            <h2 id="titleGuide">採寸ガイド</h2>
+            <p id="imgNote" class="muted">※ 画像は商品に応じて切り替わります</p>
           </div>
 
-          <div class="guide">
-            <img id="guideImage" alt="" class="guide__img" />
-          </div>
-
-          <div class="fineprint" id="imgNote">
-            ※ 画像は商品に応じて切り替わります
+          <div class="guideBox">
+            <img id="guideImage" class="guideImg" alt="Size guide image" />
+            <div id="guideFallback" class="guideFallback hidden">
+              <p class="muted">画像を読み込めませんでした。</p>
+              <p class="muted small">パス：<span id="guidePathText"></span></p>
+            </div>
           </div>
         </section>
 
-        <!-- 右：入力・注意事項・おすすめ -->
-        <section class="card">
+        <!-- Right: Inputs + Notices + Result -->
+        <section class="card" id="inputCard">
           <div class="card__head">
-            <div class="card__title" id="titleInput">入力（任意）</div>
-            <div class="card__hint" id="hintInput">入力しなくてもサイズ表は見られます</div>
+            <h2 id="titleInput">入力（任意）</h2>
+            <p id="hintInput" class="muted">入力しなくてもサイズ表は見られます</p>
           </div>
 
-          <!-- 入力モード（商品タイプに応じて出し分け） -->
-          <div id="inputArea"></div>
+          <div class="controls">
+            <div class="field">
+              <label id="labelProduct" for="productSelect">商品</label>
+              <select id="productSelect"></select>
+            </div>
 
-          <!-- 注意事項（商品タイプに応じて出し分け） -->
-          <div class="noteBox" id="noticeBox" aria-live="polite"></div>
+            <!-- TOPS/HOODIE input -->
+            <div id="inputTops" class="inputGroup hidden">
+              <div class="field">
+                <label id="labelBodyChest" for="bodyChest">ヌード胸囲（cm）</label>
+                <input id="bodyChest" inputmode="decimal" placeholder="例：88" />
+              </div>
 
-          <!-- 結果 -->
-          <div class="result" id="resultBox" aria-live="polite"></div>
+              <div class="field">
+                <label id="labelEase" for="easeSelect">ゆとり（目安）</label>
+                <select id="easeSelect"></select>
+                <p id="easeHint" class="muted small"></p>
+              </div>
+            </div>
+
+            <!-- SHOES input -->
+            <div id="inputShoes" class="inputGroup hidden">
+              <div class="field">
+                <label id="labelFootLen" for="footLen">足長（cm）</label>
+                <input id="footLen" inputmode="decimal" placeholder="例：23.5" />
+                <p id="footHint" class="muted small"></p>
+              </div>
+
+              <div class="field">
+                <label id="labelAllowance" for="allowanceSelect">捨て寸（目安）</label>
+                <select id="allowanceSelect"></select>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button id="calcBtn" class="btn primary" type="button">おすすめサイズを計算</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="notice">
+            <h3 id="titleNotice">選ぶときの注意事項</h3>
+            <ul id="noticeList" class="noticeList"></ul>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="result">
+            <h3 id="titleResult">おすすめ</h3>
+
+            <div id="resultBox" class="resultBox">
+              <div id="resultMain" class="resultMain">—</div>
+              <div id="calcReason" class="calcReason"></div>
+
+              <div id="resultActions" class="resultActions hidden">
+                <button id="btnReview" class="btn" type="button">入力を見直す</button>
+                <button id="btnChooseTable" class="btn" type="button">サイズ表で選ぶ</button>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
 
-      <!-- サイズ表 -->
-      <section class="card card--table">
+      <!-- Table -->
+      <section class="card tableCard" id="tableCard">
         <div class="card__head">
-          <div class="card__title" id="titleTable">サイズ表</div>
-          <div class="card__hint" id="hintTable">数値は平置き採寸です（誤差 ±1〜2 あり）</div>
+          <h2 id="titleTable">サイズ表</h2>
+          <p id="hintTable" class="muted small">※ 採寸方法により ±1〜2 の誤差が出る場合があります</p>
         </div>
 
         <div class="tableWrap">
-          <table class="table" id="sizeTable">
+          <table class="table">
             <thead id="tableHead"></thead>
             <tbody id="tableBody"></tbody>
           </table>
         </div>
       </section>
     </section>
+
+    <footer class="footer">
+      <div id="footerText">© Transcend Color Digital Apparel 2025</div>
+    </footer>
   </main>
 
   <script src="./app.js"></script>
