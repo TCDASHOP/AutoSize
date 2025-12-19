@@ -1,1023 +1,934 @@
-// TCDA Auto Size Guide (GitHub Pages)
-// - JP => cm, EN => inch (auto-linked)
-// - Product-specific inputs only
-// - 1-line calculation rationale
-// - Errors provide next actions
-// - After recommendation: highlight row + auto-scroll
+/* ==========
+   TCDA Auto Size (Fresh rewrite)
+   JP=cm / EN=inch (auto)
+   ========== */
 
-(() => {
-  const els = {
-    backToShop: document.getElementById("backToShop"),
-    btnLangJP: document.getElementById("btnLangJP"),
-    btnLangEN: document.getElementById("btnLangEN"),
+const i18n = {
+  jp: {
+    backToShop: "ショップに戻る",
+    title: "サイズ自動算出",
+    lead: "商品を選び、必要な項目だけ入力してください。JPはcm、ENはinchで表示されます。",
+    product: "商品",
+    chooseProduct: "商品を選択",
+    calc: "おすすめサイズを計算",
+    reset: "入力を見直す",
+    pickFromChart: "サイズ表で選ぶ",
+    chart: "サイズ表",
+    chartLead: "商品を選ぶとサイズ表が表示されます。",
 
-    pageTitle: document.getElementById("pageTitle"),
-    pageSubtitle: document.getElementById("pageSubtitle"),
-    labelProduct: document.getElementById("labelProduct"),
-    productHint: document.getElementById("productHint"),
+    topsTitle: "トップス（Tシャツ / フーディ）",
+    shoesTitle: "スリッポンシューズ",
 
-    productSelect: document.getElementById("productSelect"),
-    productButton: document.getElementById("productButton"),
-    productButtonText: document.getElementById("productButtonText"),
-    productList: document.getElementById("productList"),
+    nudeChest: "ヌード胸囲",
+    nudeChestHint: "分かる場合はこれが最優先です。",
+    fit: "フィット感",
+    fitHint: "好みで「ゆとり量」が変わります。",
 
-    inputsTops: document.getElementById("inputsTops"),
-    inputsShoes: document.getElementById("inputsShoes"),
+    estTitle: "ヌード寸法が分からない場合（推定入力）",
+    height: "身長",
+    weight: "体重",
+    sex: "性別",
+    bmi: "BMI（自動計算）",
+    estNote: "推定値は実測ではありません。自動で上書きせず、必要な場合のみ「推定値をセット」で反映できます。",
+    estSummary: (v, unit) => `推定胸囲：${v}${unit}`,
+    estSummaryNone: "推定胸囲：—",
+    setEstimated: "推定値をセット",
 
-    labelNudeChest: document.getElementById("labelNudeChest"),
-    nudeChest: document.getElementById("nudeChest"),
-    hintNudeChest: document.getElementById("hintNudeChest"),
-    labelFitTop: document.getElementById("labelFitTop"),
-    fitTop: document.getElementById("fitTop"),
-    hintFitTop: document.getElementById("hintFitTop"),
+    footLen: "足長（実測）",
+    footHint: "左右を測って長い方を採用。",
+    shoeFit: "好み",
+    shoeFitHint: "捨て寸（余裕）が変わります。",
+    shoeNote: "アウトソール長は外寸です。足長と同一視しないでください（補助指標）。",
 
-    estimateBox: document.getElementById("estimateBox"),
-    estimateSummary: document.getElementById("estimateSummary"),
-    labelHeight: document.getElementById("labelHeight"),
-    estHeight: document.getElementById("estHeight"),
-    labelWeight: document.getElementById("labelWeight"),
-    estWeight: document.getElementById("estWeight"),
-    labelSex: document.getElementById("labelSex"),
-    estSex: document.getElementById("estSex"),
-    labelBMI: document.getElementById("labelBMI"),
-    estBmi: document.getElementById("estBmi"),
-    hintBMI: document.getElementById("hintBMI"),
-    estimateNote: document.getElementById("estimateNote"),
-    btnSetEstimated: document.getElementById("btnSetEstimated"),
+    guideCaption: "※ 画像は商品に応じて切り替わります。",
 
-    labelFootLen: document.getElementById("labelFootLen"),
-    footLen: document.getElementById("footLen"),
-    hintFootLen: document.getElementById("hintFootLen"),
-    labelFitShoe: document.getElementById("labelFitShoe"),
-    fitShoe: document.getElementById("fitShoe"),
-    hintFitShoe: document.getElementById("hintFitShoe"),
-    shoesNote: document.getElementById("shoesNote"),
+    resultTitle: "おすすめ",
+    basisTops: (target, ease, unit) => `根拠：ヌード胸囲 + ゆとり（${ease}${unit}）→ 目標仕上がり胸囲 ${target}${unit} を満たす最小サイズ`,
+    basisShoes: (target, add, unit) => `根拠：足長 + 捨て寸（${add}${unit}）→ 目標 ${target}${unit} を満たす最小サイズ`,
+    notFound: "該当するサイズが見当たりませんでした。",
+    selfCheckTitle: "サイズが合わなかったと感じたら（2〜3問チェック）",
 
-    calcBtn: document.getElementById("calcBtn"),
-    btnReset: document.getElementById("btnReset"),
-    btnScrollTable: document.getElementById("btnScrollTable"),
+    selfT1: "きついのはどこ？",
+    selfT1a: "胸・肩まわり → 次は 1サイズ上（または「ゆったり」）",
+    selfT1b: "丈だけ短い/長い → サイズ表の「着丈」を優先して近いサイズへ",
+    selfT1c: "袖だけ違和感 → 体感は肩線で変わるので「身幅→着丈→袖丈」の順で選ぶ",
+    selfT2: "入力は実測？推定？",
+    selfT2a: "推定入力だった → 次回はヌード寸法を実測して再計算（推定は誤差が出ます）",
+    selfT3: "迷う場合の最短ルート",
+    selfT3a: "手持ちの“いちばん好きな服”を平置きで測り、サイズ表の近い数値を選ぶ",
 
-    result: document.getElementById("result"),
-    resultTitle: document.getElementById("resultTitle"),
-    resultValue: document.getElementById("resultValue"),
-    resultDetail: document.getElementById("resultDetail"),
-    btnHighlight: document.getElementById("btnHighlight"),
+    selfS1: "どこがきつい？",
+    selfS1a: "つま先が当たる → 足長が足りない可能性（次は大きめ寄り）",
+    selfS1b: "幅/甲がきつい → 幅広/甲高は体感が変わる（迷ったら大きめ寄り）",
+    selfS2: "入力は足長（実測）？",
+    selfS2a: "推定や感覚だった → 左右の足長を測り、長い方で選ぶ",
+    selfS3: "アウトソールの扱い",
+    selfS3a: "アウトソール長は外寸なので補助指標。足長と同一視しない"
+  },
 
-    errorBox: document.getElementById("errorBox"),
-    errorMsg: document.getElementById("errorMsg"),
-    btnFixInput: document.getElementById("btnFixInput"),
-    btnGoTable: document.getElementById("btnGoTable"),
+  en: {
+    backToShop: "Back to shop",
+    title: "Auto Size Guide",
+    lead: "Choose a product and enter only the required fields. JP shows cm, EN shows inches.",
+    product: "Product",
+    chooseProduct: "Select a product",
+    calc: "Calculate recommended size",
+    reset: "Review inputs",
+    pickFromChart: "Choose from size chart",
+    chart: "Size chart",
+    chartLead: "Select a product to display its size chart.",
 
-    guideTitle: document.getElementById("guideTitle"),
-    guideCaption: document.getElementById("guideCaption"),
-    guideImg: document.getElementById("guideImg"),
-    notesTitle: document.getElementById("notesTitle"),
-    notesList: document.getElementById("notesList"),
+    topsTitle: "Tops (T-shirt / Hoodie)",
+    shoesTitle: "Slip-on canvas shoes",
 
-    tableCard: document.getElementById("tableCard"),
-    tableTitle: document.getElementById("tableTitle"),
-    tableUnit: document.getElementById("tableUnit"),
-    tableHeadRow: document.getElementById("tableHeadRow"),
-    tableBody: document.getElementById("tableBody"),
-    tableNote: document.getElementById("tableNote"),
-  };
+    nudeChest: "Nude chest",
+    nudeChestHint: "If you know it, this is the highest priority input.",
+    fit: "Fit preference",
+    fitHint: "Ease changes by preference.",
 
-  const i18n = {
-    jp: {
-      pageTitle: "サイズを自動でおすすめ",
-      pageSubtitle: "商品を選んで、必要な数値だけ入力してください。",
-      backToShop: "ショップに戻る",
-      labelProduct: "商品",
-      productHintTops: "トップスは「ヌード胸囲」を基準におすすめします。",
-      productHintShoes: "シューズは「足長（かかと〜一番長い指）」を基準におすすめします。",
+    estTitle: "If you don’t know your nude measurement (Estimator)",
+    height: "Height",
+    weight: "Weight",
+    sex: "Sex",
+    bmi: "BMI (auto)",
+    estNote: "This is not an actual measurement. It will NOT overwrite automatically. Tap “Set estimated value” only if needed.",
+    estSummary: (v, unit) => `Estimated chest: ${v}${unit}`,
+    estSummaryNone: "Estimated chest: —",
+    setEstimated: "Set estimated value",
 
-      labelNudeChest: "ヌード胸囲（cm）",
-      hintNudeChest: "分からない場合は下の「推定入力」を使えます（自動で上書きしません）。",
-      labelFitTop: "好み（フィット感）",
-      hintFitTop: "標準：+10cm / ぴったり：+6cm / ゆったり：+14cm（目安）",
+    footLen: "Foot length (measured)",
+    footHint: "Measure both feet and use the longer one.",
+    shoeFit: "Preference",
+    shoeFitHint: "Toe allowance changes by preference.",
+    shoeNote: "Outsole length is an external measurement. Treat it as a reference (do not equate it with foot length).",
 
-      estimateSummary: "ヌード寸法が分からない場合（推定入力）",
-      labelHeight: "身長（cm）",
-      labelWeight: "体重（kg）",
-      labelSex: "性別",
-      female: "女性",
-      male: "男性",
-      labelBMI: "BMI（任意）",
-      hintBMI: "空欄なら身長と体重から自動計算します。",
-      estimateNote: "推定入力は補助機能です。可能な限り実測のヌード寸法を入力してください。",
-      setEstimated: "推定値をセット",
-      msgSetEstimatedDone: "推定値をヌード胸囲にセットしました。",
+    guideCaption: "*Image changes by product.",
 
-      labelFootLen: "足長（cm）",
-      hintFootLen: "左右を測って長い方を入力してください。",
-      labelFitShoe: "好み（捨て寸）",
-      hintFitShoe: "標準：+10mm / ぴったり：+7mm / ゆったり：+12mm",
-      shoesNote: "アウトソール長は外寸（補助指標）です。足長と同一視しないでください。",
+    resultTitle: "Recommended",
+    basisTops: (target, ease, unit) => `Basis: nude chest + ease (${ease}${unit}) → target finished chest ${target}${unit}, pick the smallest size that meets it`,
+    basisShoes: (target, add, unit) => `Basis: foot length + allowance (${add}${unit}) → target ${target}${unit}, pick the smallest size that meets it`,
+    notFound: "No matching size was found.",
+    selfCheckTitle: "If the size didn’t feel right (2–3 quick checks)",
 
-      calcBtn: "おすすめサイズを計算",
-      btnReset: "入力を見直す",
-      btnScrollTable: "サイズ表で選ぶ",
+    selfT1: "Where did it feel off?",
+    selfT1a: "Tight in chest/shoulders → choose one size up (or select “Loose”)",
+    selfT1b: "Only length feels off → prioritize “Length” in the size chart",
+    selfT1c: "Only sleeves feel off → shoulder seam changes the feel; prioritize Chest (flat) → Length → Sleeve",
+    selfT2: "Measured value or estimate?",
+    selfT2a: "If estimated → re-check with actual nude measurements (estimates can vary)",
+    selfT3: "Fastest way to avoid mistakes",
+    selfT3a: "Measure your best-fitting item flat and pick the closest numbers in the chart",
 
-      guideTitle: "測り方ガイド",
-      guideCaption: "※ 画像は商品に応じて切り替わります / Image changes by product.",
-      notesTitle: "選ぶときの注意事項",
+    selfS1: "What feels tight?",
+    selfS1a: "Toes hit the front → foot length may be too short (go slightly bigger)",
+    selfS1b: "Width/instep feels tight → wide/high instep can change fit (if unsure, go bigger)",
+    selfS2: "Did you measure foot length?",
+    selfS2a: "If not → measure both feet and use the longer one",
+    selfS3: "About outsole length",
+    selfS3a: "Outsole length is external; treat it as a reference (not the same as foot length)"
+  }
+};
 
-      tableTitle: "サイズ表",
-      tableUnitCm: "表示：cm",
-      tableUnitIn: "表示：inch",
-      tableNote: "※ 表の数値は仕上がり（完成）寸法です。測り方で±1〜2cm（±0.5〜0.8in）程度の誤差が出る場合があります。",
+const PRODUCTS = [
+  {
+    key: "mens_crew",
+    type: "tops",
+    titleJP: "Men's Crew Neck",
+    subJP: "T-Shirt",
+    titleEN: "Men's Crew Neck",
+    subEN: "T-Shirt",
+    guideImg: "assets/guide_tshirt.jpg",
+    csv: { cm: "data/mens_crew_cm.csv", inch: "data/mens_crew_inch.csv" }
+  },
+  {
+    key: "womens_crew",
+    type: "tops",
+    titleJP: "Women's Crew Neck",
+    subJP: "T-Shirt",
+    titleEN: "Women's Crew Neck",
+    subEN: "T-Shirt",
+    guideImg: "assets/guide_tshirt.jpg",
+    csv: { cm: "data/womens_crew_cm.csv", inch: "data/womens_crew_inch.csv" }
+  },
+  {
+    key: "unisex_hoodie",
+    type: "tops",
+    titleJP: "Unisex",
+    subJP: "Hoodie",
+    titleEN: "Unisex",
+    subEN: "Hoodie",
+    guideImg: "assets/guide_hoodie.jpg",
+    csv: { cm: "data/unisex_hoodie_cm.csv", inch: "data/unisex_hoodie_inch.csv" }
+  },
+  {
+    key: "unisex_zip_hoodie",
+    type: "tops",
+    titleJP: "Unisex ZIP",
+    subJP: "Hoodie",
+    titleEN: "Unisex ZIP",
+    subEN: "Hoodie",
+    guideImg: "assets/guide_zip_hoodie.jpg",
+    csv: { cm: "data/unisex_zip_hoodie_cm.csv", inch: "data/unisex_zip_hoodie_inch.csv" }
+  },
+  {
+    key: "slipon_womens",
+    type: "shoes",
+    titleJP: "Women's Slip-On",
+    subJP: "Canvas Shoes",
+    titleEN: "Women's Slip-On",
+    subEN: "Canvas Shoes",
+    guideImg: "assets/guide_slipon.jpg",
+    csv: { cm: "data/slipon_womens_cm.csv", inch: "data/slipon_womens_inch.csv" }
+  },
+  {
+    key: "slipon_mens",
+    type: "shoes",
+    titleJP: "Men's Slip-On",
+    subJP: "Canvas Shoes",
+    titleEN: "Men's Slip-On",
+    subEN: "Canvas Shoes",
+    guideImg: "assets/guide_slipon.jpg",
+    csv: { cm: "data/slipon_mens_cm.csv", inch: "data/slipon_mens_inch.csv" }
+  }
+];
 
-      resultTitle: "おすすめ",
-      resultTitleNotFound: "該当するサイズが見当たりませんでした。",
-      btnHighlight: "サイズ表で該当行を見る",
-      btnFixInput: "入力を見直す",
-      btnGoTable: "サイズ表で選ぶ",
+const els = {
+  backToShop: document.getElementById("backToShop"),
+  langJP: document.getElementById("langJP"),
+  langEN: document.getElementById("langEN"),
 
-      // notes per category
-      notesTops: [
-        "最短で失敗を減らす：手持ちの「いちばん好きな服」を平置きで測り、サイズ表の近い数値を選ぶ。",
-        "体から逆算：ヌード胸囲＋ゆとり → 仕上がり胸囲 → 身幅（仕上がり胸囲÷2）。",
-        "優先順位：身幅 → 着丈 → 袖丈（袖は肩線位置で体感が変わる）。",
-        "Men’sはゆったり・直線的、Women’sはフィット寄りになりやすい（傾向）。",
-      ],
-      notesHoodie: [
-        "基本はTシャツと同じ（胸囲基準＋ゆとり → 身幅 → 着丈 → 袖）。",
-        "フーディは裾リブ等で体感が変わるので、同じ数値でも印象が少し違う点に注意。",
-      ],
-      notesShoes: [
-        "主役は足長（かかと〜一番長い指）。左右を測って長い方を採用。",
-        "捨て寸：足長＋7〜12mm（目安）。アウトソール長は外寸なので足長と同一視しない。",
-        "幅広/甲高は注意（迷ったら大きめ寄り）。Men’sは幅広め、Women’sはタイトになりやすい（傾向）。",
-      ],
-    },
+  pageTitle: document.getElementById("pageTitle"),
+  pageLead: document.getElementById("pageLead"),
+  productLabel: document.getElementById("productLabel"),
+  productBtn: document.getElementById("productBtn"),
+  productBtnText: document.getElementById("productBtnText"),
+  productMenu: document.getElementById("productMenu"),
 
-    en: {
-      pageTitle: "Auto size recommendation",
-      pageSubtitle: "Choose a product, then enter only the required measurements.",
-      backToShop: "Back to shop",
-      labelProduct: "Product",
-      productHintTops: "For tops, we recommend based on your nude chest measurement.",
-      productHintShoes: "For shoes, we recommend based on your foot length (heel to longest toe).",
+  inputsArea: document.getElementById("inputsArea"),
+  groupTops: document.getElementById("groupTops"),
+  groupShoes: document.getElementById("groupShoes"),
 
-      labelNudeChest: "Nude chest (in)",
-      hintNudeChest: "If you don't know it, you can use the estimator below (it will NOT overwrite automatically).",
-      labelFitTop: "Fit preference",
-      hintFitTop: "Standard: +4.0 in / Snug: +2.4 in / Loose: +5.5 in (guide)",
+  topsTitle: document.getElementById("topsTitle"),
+  shoesTitle: document.getElementById("shoesTitle"),
 
-      estimateSummary: "If you don't know your nude measurement (Estimator)",
-      labelHeight: "Height (cm)",
-      labelWeight: "Weight (kg)",
-      labelSex: "Sex",
-      female: "Female",
-      male: "Male",
-      labelBMI: "BMI (optional)",
-      hintBMI: "Leave blank to auto-calculate from height & weight.",
-      estimateNote: "Estimator is a support feature. For best accuracy, measure and enter your actual nude measurement.",
-      setEstimated: "Set estimated value",
-      msgSetEstimatedDone: "Estimated value has been set to Nude chest.",
+  nudeChest: document.getElementById("nudeChest"),
+  unitChest: document.getElementById("unitChest"),
+  labelNudeChest: document.getElementById("labelNudeChest"),
+  hintNudeChest: document.getElementById("hintNudeChest"),
 
-      labelFootLen: "Foot length (in)",
-      hintFootLen: "Measure both feet and use the longer one.",
-      labelFitShoe: "Allowance",
-      hintFitShoe: "Standard: +0.39 in / Snug: +0.28 in / Loose: +0.47 in",
-      shoesNote: "Outsole length is an outside measurement (reference only). Do not treat it as foot length.",
+  fitPref: document.getElementById("fitPref"),
+  labelFit: document.getElementById("labelFit"),
+  hintFit: document.getElementById("hintFit"),
 
-      calcBtn: "Calculate recommended size",
-      btnReset: "Review inputs",
-      btnScrollTable: "Choose from size chart",
+  height: document.getElementById("height"),
+  weight: document.getElementById("weight"),
+  sex: document.getElementById("sex"),
+  bmi: document.getElementById("bmi"),
+  unitHeight: document.getElementById("unitHeight"),
+  unitWeight: document.getElementById("unitWeight"),
+  labelHeight: document.getElementById("labelHeight"),
+  labelWeight: document.getElementById("labelWeight"),
+  labelSex: document.getElementById("labelSex"),
+  labelBmi: document.getElementById("labelBmi"),
+  estTitle: document.getElementById("estTitle"),
+  estSummary: document.getElementById("estSummary"),
+  estNote: document.getElementById("estNote"),
+  btnSetEstimated: document.getElementById("btnSetEstimated"),
 
-      guideTitle: "How to measure",
-      guideCaption: "※ Image changes by product.",
-      notesTitle: "Notes when choosing",
+  footLen: document.getElementById("footLen"),
+  unitFoot: document.getElementById("unitFoot"),
+  labelFootLen: document.getElementById("labelFootLen"),
+  hintFoot: document.getElementById("hintFoot"),
+  shoeFit: document.getElementById("shoeFit"),
+  labelShoeFit: document.getElementById("labelShoeFit"),
+  hintShoeFit: document.getElementById("hintShoeFit"),
+  shoeNote: document.getElementById("shoeNote"),
 
-      tableTitle: "Size chart",
-      tableUnitCm: "Display: cm",
-      tableUnitIn: "Display: inch",
-      tableNote: "※ Values are finished measurements. Small variations may occur depending on how measured.",
+  guideImg: document.getElementById("guideImg"),
+  guideCaption: document.getElementById("guideCaption"),
 
-      resultTitle: "Recommended",
-      resultTitleNotFound: "No matching size was found.",
-      btnHighlight: "Show the matching row",
-      btnFixInput: "Review inputs",
-      btnGoTable: "Choose from size chart",
+  calcBtn: document.getElementById("calcBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  scrollTableBtn: document.getElementById("scrollTableBtn"),
 
-      notesTops: [
-        "Fastest way to reduce mistakes: measure your favorite item (flat) and pick the closest numbers in the chart.",
-        "From body: Nude chest + ease → Finished chest → Chest (flat) = Finished chest ÷ 2.",
-        "Priority: Chest (flat) → Length → Sleeve (sleeve feel depends on shoulder seam).",
-        "Tendency: Men’s is straighter/looser; Women’s is more fitted.",
-      ],
-      notesHoodie: [
-        "Same base logic as T-shirts (chest + ease → chest(flat) → length → sleeve).",
-        "Hoodies can feel different due to rib hem/cuffs even with similar numbers.",
-      ],
-      notesShoes: [
-        "Key is foot length (heel to longest toe). Measure both feet and use the longer one.",
-        "Allowance: foot length + 7–12 mm (guide). Outsole length is outside length; do not treat it as foot length.",
-        "Wide/high instep: consider sizing up when in doubt. Men’s tends to be wider, Women’s can feel tighter.",
-      ],
+  resultArea: document.getElementById("resultArea"),
+  resultTitle: document.getElementById("resultTitle"),
+  resultValue: document.getElementById("resultValue"),
+  resultDetail: document.getElementById("resultDetail"),
+
+  selfCheckWrap: document.getElementById("selfCheckWrap"),
+
+  errorBox: document.getElementById("errorBox"),
+  errorText: document.getElementById("errorText"),
+  errorResetBtn: document.getElementById("errorResetBtn"),
+  errorTableBtn: document.getElementById("errorTableBtn"),
+
+  chartTitle: document.getElementById("chartTitle"),
+  chartMeta: document.getElementById("chartMeta"),
+  tableHead: document.getElementById("tableHead"),
+  tableBody: document.getElementById("tableBody"),
+  sizeTable: document.getElementById("sizeTable")
+};
+
+const state = {
+  lang: "jp",           // jp / en
+  unit: "cm",           // cm / inch (auto from lang)
+  productKey: null,     // selected product key
+  productType: null,    // tops / shoes
+  table: { headers: [], rows: [] }, // loaded CSV
+  lastEstimatedChestCm: null,       // for set button
+  usedEstimateInCalc: false
+};
+
+function tget() { return i18n[state.lang]; }
+let t = tget();
+
+/* ---------- Helpers ---------- */
+function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+function round1(n){ return Math.round(n * 10) / 10; }
+function cmToIn(cm){ return cm / 2.54; }
+function inToCm(inch){ return inch * 2.54; }
+
+function parseNumberSmart(s){
+  if (s == null) return null;
+  const raw = String(s).trim();
+  if (!raw) return null;
+
+  // handle "7 1/2"
+  const mixed = raw.match(/^(\d+)\s+(\d+)\/(\d+)$/);
+  if (mixed){
+    const a = parseFloat(mixed[1]);
+    const b = parseFloat(mixed[2]);
+    const c = parseFloat(mixed[3]);
+    if (isFinite(a)&&isFinite(b)&&isFinite(c)&&c!==0) return a + (b/c);
+  }
+
+  // handle "1/2"
+  const frac = raw.match(/^(\d+)\/(\d+)$/);
+  if (frac){
+    const b = parseFloat(frac[1]);
+    const c = parseFloat(frac[2]);
+    if (isFinite(b)&&isFinite(c)&&c!==0) return b / c;
+  }
+
+  // normal number (allow commas)
+  const v = parseFloat(raw.replace(/,/g,""));
+  if (!isFinite(v)) return null;
+  return v;
+}
+
+function csvSplitLine(line){
+  // simple CSV split (supports quoted commas)
+  const out = [];
+  let cur = "";
+  let q = false;
+  for (let i=0;i<line.length;i++){
+    const ch = line[i];
+    if (ch === '"'){ q = !q; continue; }
+    if (ch === "," && !q){ out.push(cur); cur=""; continue; }
+    cur += ch;
+  }
+  out.push(cur);
+  return out.map(s => s.trim());
+}
+
+async function loadCSV(path){
+  const res = await fetch(path, { cache: "no-store" });
+  if (!res.ok) throw new Error(`CSV load failed: ${path}`);
+  const text = await res.text();
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return { headers: [], rows: [] };
+
+  const headers = csvSplitLine(lines[0]);
+  const rows = lines.slice(1).map(l => {
+    const cols = csvSplitLine(l);
+    const row = {};
+    headers.forEach((h, idx) => row[h] = cols[idx] ?? "");
+    return row;
+  });
+
+  return { headers, rows };
+}
+
+/* ---------- UI: language + units ---------- */
+function setLang(lang){
+  state.lang = lang;
+  state.unit = (lang === "jp") ? "cm" : "inch";
+  t = tget();
+
+  els.langJP.classList.toggle("isActive", lang==="jp");
+  els.langEN.classList.toggle("isActive", lang==="en");
+  els.langJP.setAttribute("aria-selected", lang==="jp" ? "true":"false");
+  els.langEN.setAttribute("aria-selected", lang==="en" ? "true":"false");
+
+  applyI18n();
+  refreshUnits();
+  rerenderProductButton();
+  rerenderTable();   // keeps same product but flips csv on next load; user must reselect? we auto reload if selected
+  if (state.productKey) selectProduct(state.productKey, true);
+}
+
+function applyI18n(){
+  els.backToShop.textContent = t.backToShop;
+  els.pageTitle.textContent = t.title;
+  els.pageLead.textContent = t.lead;
+  els.productLabel.textContent = t.product;
+
+  els.topsTitle.textContent = t.topsTitle;
+  els.shoesTitle.textContent = t.shoesTitle;
+
+  els.labelNudeChest.textContent = t.nudeChest;
+  els.hintNudeChest.textContent = t.nudeChestHint;
+
+  els.labelFit.textContent = t.fit;
+  els.hintFit.textContent = t.fitHint;
+
+  els.estTitle.textContent = t.estTitle;
+  els.labelHeight.textContent = t.height;
+  els.labelWeight.textContent = t.weight;
+  els.labelSex.textContent = t.sex;
+  els.labelBmi.textContent = t.bmi;
+  els.estNote.textContent = t.estNote;
+
+  // Fit select labels (JP/EN)
+  setSelectLabels();
+
+  els.labelFootLen.textContent = t.footLen;
+  els.hintFoot.textContent = t.footHint;
+  els.labelShoeFit.textContent = t.shoeFit;
+  els.hintShoeFit.textContent = t.shoeFitHint;
+  els.shoeNote.textContent = t.shoeNote;
+
+  els.guideCaption.textContent = t.guideCaption;
+
+  els.calcBtn.textContent = t.calc;
+  els.resetBtn.textContent = t.reset;
+  els.scrollTableBtn.textContent = t.pickFromChart;
+
+  els.resultTitle.textContent = t.resultTitle;
+
+  els.errorText.textContent = t.notFound;
+  els.errorResetBtn.textContent = t.reset;
+  els.errorTableBtn.textContent = t.pickFromChart;
+
+  els.chartTitle.textContent = t.chart;
+  els.chartMeta.textContent = t.chartLead;
+
+  if (!state.productKey){
+    els.productBtnText.textContent = t.chooseProduct;
+  }
+
+  // Set Estimated button label (even if hidden)
+  els.btnSetEstimated.textContent = t.setEstimated;
+
+  // Self-check title updates on next render
+}
+
+function setSelectLabels(){
+  const opts = {
+    jp: { standard:"標準", snug:"ぴったり", loose:"ゆったり" },
+    en: { standard:"Standard", snug:"Snug", loose:"Loose" }
+  }[state.lang];
+
+  for (const sel of [els.fitPref, els.shoeFit]){
+    [...sel.options].forEach(o => {
+      o.textContent = opts[o.value] ?? o.textContent;
+    });
+  }
+}
+
+function refreshUnits(){
+  els.unitChest.textContent = state.unit === "cm" ? "cm" : "in";
+  els.unitFoot.textContent = state.unit === "cm" ? "cm" : "in";
+  els.unitHeight.textContent = "cm";
+  els.unitWeight.textContent = "kg";
+}
+
+/* ---------- Product dropdown ---------- */
+function openMenu(open){
+  els.productMenu.hidden = !open;
+  els.productBtn.setAttribute("aria-expanded", open ? "true":"false");
+}
+
+function buildProductMenu(){
+  els.productMenu.innerHTML = "";
+  PRODUCTS.forEach(p => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("role", "option");
+    btn.dataset.key = p.key;
+
+    const title = (state.lang==="jp") ? p.titleJP : p.titleEN;
+    const sub   = (state.lang==="jp") ? p.subJP : p.subEN;
+
+    btn.innerHTML = `<span class="optTitle">${escapeHtml(title)}</span><span class="optSub">${escapeHtml(sub)}</span>`;
+    btn.addEventListener("click", () => {
+      openMenu(false);
+      selectProduct(p.key);
+    });
+
+    els.productMenu.appendChild(btn);
+  });
+}
+
+function rerenderProductButton(){
+  const p = PRODUCTS.find(x => x.key === state.productKey);
+  if (!p){
+    els.productBtnText.textContent = t.chooseProduct;
+    return;
+  }
+  const title = (state.lang==="jp") ? p.titleJP : p.titleEN;
+  const sub   = (state.lang==="jp") ? p.subJP : p.subEN;
+  els.productBtnText.textContent = `${title} ${sub}`;
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* ---------- Product selection ---------- */
+async function selectProduct(key, silent=false){
+  const p = PRODUCTS.find(x => x.key === key);
+  if (!p) return;
+
+  state.productKey = p.key;
+  state.productType = p.type;
+
+  rerenderProductButton();
+
+  // show inputs area
+  els.inputsArea.hidden = false;
+  els.groupTops.hidden = (p.type !== "tops");
+  els.groupShoes.hidden = (p.type !== "shoes");
+
+  // guide image
+  els.guideImg.src = p.guideImg;
+
+  // reset estimate state
+  state.lastEstimatedChestCm = null;
+  state.usedEstimateInCalc = false;
+  els.btnSetEstimated.hidden = true;
+  els.estSummary.textContent = t.estSummaryNone;
+
+  // clear result UI
+  clearResult();
+
+  // load CSV for current lang/unit
+  const csvPath = (state.unit === "cm") ? p.csv.cm : p.csv.inch;
+  try{
+    state.table = await loadCSV(csvPath);
+    rerenderTable();
+    if (!silent) els.chartMeta.textContent = `${t.chart}：${(state.lang==="jp") ? p.titleJP+" "+p.subJP : p.titleEN+" "+p.subEN}`;
+  }catch(e){
+    // if csv fails, show empty table but keep UI
+    state.table = { headers: [], rows: [] };
+    rerenderTable();
+    if (!silent) els.chartMeta.textContent = `CSV load error: ${csvPath}`;
+  }
+}
+
+/* ---------- Table rendering + highlight ---------- */
+function rerenderTable(){
+  const { headers, rows } = state.table;
+
+  // head
+  if (!headers.length){
+    els.tableHead.innerHTML = "<tr><th>—</th></tr>";
+    els.tableBody.innerHTML = "<tr><td>—</td></tr>";
+    return;
+  }
+
+  els.tableHead.innerHTML = `<tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join("")}</tr>`;
+
+  els.tableBody.innerHTML = rows.map((r, idx) => {
+    const tds = headers.map(h => `<td>${escapeHtml(r[h] ?? "")}</td>`).join("");
+    return `<tr data-idx="${idx}">${tds}</tr>`;
+  }).join("");
+}
+
+function clearHighlight(){
+  els.tableBody.querySelectorAll("tr").forEach(tr => tr.classList.remove("isHit"));
+}
+
+function highlightRow(rowIndex){
+  clearHighlight();
+  const tr = els.tableBody.querySelector(`tr[data-idx="${rowIndex}"]`);
+  if (!tr) return;
+  tr.classList.add("isHit");
+  tr.scrollIntoView({ behavior:"smooth", block:"center" });
+}
+
+/* ---------- Estimator (tops only) ---------- */
+function calcBmi(heightCm, weightKg){
+  if (!heightCm || !weightKg) return null;
+  const h = heightCm / 100;
+  if (h <= 0) return null;
+  return weightKg / (h*h);
+}
+
+// deliberately heuristic (support feature)
+function estimateChestCm(heightCm, weightKg, sex){
+  const bmi = calcBmi(heightCm, weightKg);
+  if (!bmi) return null;
+
+  // baseline by sex + height
+  const base = (sex === "male") ? (heightCm * 0.54) : (heightCm * 0.52);
+  // bmi adjustment around 22
+  const adj = (bmi - 22) * 1.2;
+  const est = base + adj;
+
+  return clamp(est, 68, 140);
+}
+
+function updateEstimatorUI(){
+  if (state.productType !== "tops") return;
+
+  const h = parseNumberSmart(els.height.value);
+  const w = parseNumberSmart(els.weight.value);
+  const bmi = calcBmi(h, w);
+
+  els.bmi.value = bmi ? round1(bmi) : "";
+
+  const estCm = estimateChestCm(h, w, els.sex.value);
+  if (!estCm){
+    state.lastEstimatedChestCm = null;
+    els.estSummary.textContent = t.estSummaryNone;
+    if (!state.usedEstimateInCalc) els.btnSetEstimated.hidden = true;
+    return;
+  }
+
+  state.lastEstimatedChestCm = estCm;
+
+  // display in current unit
+  const v = (state.unit === "cm") ? Math.round(estCm) : round1(cmToIn(estCm));
+  const unitLabel = (state.unit === "cm") ? "cm" : "in";
+  els.estSummary.textContent = t.estSummary(v, unitLabel);
+
+  // show set button only if last calc used estimate OR nudeChest is empty (user likely needs it)
+  const nude = parseNumberSmart(els.nudeChest.value);
+  els.btnSetEstimated.hidden = !!nude; // hide if manual input exists
+}
+
+/* ---------- Recommendation logic ---------- */
+function easeByFit(){
+  // industry-ish ease guidelines (simple)
+  // snug: smaller ease / standard: medium / loose: larger
+  const mapCm = { snug: 6, standard: 10, loose: 14 };
+  const v = mapCm[els.fitPref.value] ?? 10;
+  return (state.unit === "cm") ? v : round1(cmToIn(v));
+}
+
+function allowanceByFit(){
+  // toe allowance 7-12mm -> in inches ~0.28-0.47
+  const mapCm = { snug: 0.7, standard: 1.0, loose: 1.2 };
+  const v = mapCm[els.shoeFit.value] ?? 1.0;
+  return (state.unit === "cm") ? v : round1(cmToIn(v));
+}
+
+function findNumericColumn(headers, candidates){
+  const lower = headers.map(h => h.toLowerCase());
+  for (const cand of candidates){
+    const idx = lower.findIndex(h => h.replaceAll(" ","") === cand.replaceAll(" ",""));
+    if (idx >= 0) return headers[idx];
+  }
+  // fallback: contains match
+  for (const cand of candidates){
+    const idx = lower.findIndex(h => h.includes(cand));
+    if (idx >= 0) return headers[idx];
+  }
+  return null;
+}
+
+function recommendTops(){
+  const { headers, rows } = state.table;
+  if (!headers.length || !rows.length) return { ok:false };
+
+  const colSize = findNumericColumn(headers, ["size"]);
+  const colChestFlat = findNumericColumn(headers, ["chest(flat)", "chestflat", "chest (flat)", "chest"]);
+  // some of your csv might use: "Chest (flat)" / "Chest (flat)" etc.
+
+  if (!colSize || !colChestFlat) return { ok:false };
+
+  let nude = parseNumberSmart(els.nudeChest.value);
+  const ease = easeByFit();
+
+  state.usedEstimateInCalc = false;
+
+  // if nude missing, try estimate -> convert to current unit
+  if (!nude){
+    const estCm = state.lastEstimatedChestCm;
+    if (isFinite(estCm)){
+      nude = (state.unit === "cm") ? estCm : cmToIn(estCm);
+      state.usedEstimateInCalc = true;
+      // show set button AFTER calc (user can apply)
+      els.btnSetEstimated.hidden = false;
     }
-  };
+  }
 
-  // Data sources (cleaned CSVs)
-  const products = [
-    {
-      key: "mens_crew",
-      type: "tops",
-      labelJP: ["Men's Crew Neck", "T-Shirt"],
-      labelEN: ["Men's Crew Neck", "T-Shirt"],
-      guideImg: "assets/guide_tshirt.jpg",
-      csv: { cm: "data/mens_crew_cm.csv", inch: "data/mens_crew_inch.csv" },
-      noteSet: "tops"
-    },
-    {
-      key: "womens_crew",
-      type: "tops",
-      labelJP: ["Women's Crew Neck", "T-Shirt"],
-      labelEN: ["Women's Crew Neck", "T-Shirt"],
-      guideImg: "assets/guide_tshirt.jpg",
-      csv: { cm: "data/womens_crew_cm.csv", inch: "data/womens_crew_inch.csv" },
-      noteSet: "tops"
-    },
-    {
-      key: "unisex_hoodie",
-      type: "hoodie",
-      labelJP: ["Unisex", "Hoodie"],
-      labelEN: ["Unisex", "Hoodie"],
-      guideImg: "assets/guide_hoodie.jpg",
-      csv: { cm: "data/unisex_hoodie_cm.csv", inch: "data/unisex_hoodie_inch.csv" },
-      noteSet: "hoodie"
-    },
-    {
-      key: "unisex_zip_hoodie",
-      type: "hoodie",
-      labelJP: ["Unisex ZIP", "Hoodie"],
-      labelEN: ["Unisex ZIP", "Hoodie"],
-      guideImg: "assets/guide_zip_hoodie.jpg",
-      csv: { cm: "data/unisex_zip_hoodie_cm.csv", inch: "data/unisex_zip_hoodie_inch.csv" },
-      noteSet: "hoodie"
-    },
-    {
-      key: "slipon_womens",
-      type: "shoes",
-      labelJP: ["Women's Slip-On", "Canvas Shoes"],
-      labelEN: ["Women's Slip-On", "Canvas Shoes"],
-      guideImg: "assets/guide_slipon.jpg",
-      csv: { cm: "data/slipon_womens_cm.csv", inch: "data/slipon_womens_inch.csv" },
-      noteSet: "shoes"
-    },
-    {
-      key: "slipon_mens",
-      type: "shoes",
-      labelJP: ["Men's Slip-On", "Canvas Shoes"],
-      labelEN: ["Men's Slip-On", "Canvas Shoes"],
-      guideImg: "assets/guide_slipon.jpg",
-      csv: { cm: "data/slipon_mens_cm.csv", inch: "data/slipon_mens_inch.csv" },
-      noteSet: "shoes"
-    },
+  if (!nude) return { ok:false };
+
+  const target = nude + ease; // target finished chest circumference
+  const targetFlat = target / 2; // target chest flat (1/2)
+
+  // Find minimal row where chestFlat >= targetFlat
+  let bestIdx = -1;
+  let bestVal = Infinity;
+
+  rows.forEach((r, idx) => {
+    const v = parseNumberSmart(r[colChestFlat]);
+    if (!isFinite(v)) return;
+    if (v >= targetFlat && v < bestVal){
+      bestVal = v;
+      bestIdx = idx;
+    }
+  });
+
+  if (bestIdx < 0){
+    // no size large enough
+    return { ok:false, notFound:true };
+  }
+
+  const sizeLabel = rows[bestIdx][colSize] ?? "—";
+  const unitLabel = (state.unit === "cm") ? "cm" : "in";
+
+  const basis = t.basisTops(
+    formatNum(target, state.unit),
+    formatNum(ease, state.unit),
+    unitLabel
+  );
+
+  return { ok:true, bestIdx, sizeLabel, basis };
+}
+
+function recommendShoes(){
+  const { headers, rows } = state.table;
+  if (!headers.length || !rows.length) return { ok:false };
+
+  const colSize = findNumericColumn(headers, ["us", "size"]);
+  const colFoot = findNumericColumn(headers, ["footlength", "foot length", "foot"]);
+  if (!colSize || !colFoot) return { ok:false };
+
+  const foot = parseNumberSmart(els.footLen.value);
+  if (!foot) return { ok:false };
+
+  const add = allowanceByFit();
+  const target = foot + add;
+
+  let bestIdx = -1;
+  let bestVal = Infinity;
+
+  rows.forEach((r, idx) => {
+    const v = parseNumberSmart(r[colFoot]);
+    if (!isFinite(v)) return;
+    if (v >= target && v < bestVal){
+      bestVal = v;
+      bestIdx = idx;
+    }
+  });
+
+  if (bestIdx < 0) return { ok:false, notFound:true };
+
+  const sizeLabel = rows[bestIdx][colSize] ?? "—";
+  const unitLabel = (state.unit === "cm") ? "cm" : "in";
+  const basis = t.basisShoes(
+    formatNum(target, state.unit),
+    formatNum(add, state.unit),
+    unitLabel
+  );
+
+  return { ok:true, bestIdx, sizeLabel, basis };
+}
+
+function formatNum(n, unit){
+  if (!isFinite(n)) return "—";
+  if (unit === "cm") return `${Math.round(n)}`;
+  return `${round1(n)}`;
+}
+
+/* ---------- Self-check rendering ---------- */
+function renderSelfCheck(type){
+  const isShoes = (type === "shoes");
+  const items = isShoes ? [
+    [t.selfS1, [t.selfS1a, t.selfS1b]],
+    [t.selfS2, [t.selfS2a]],
+    [t.selfS3, [t.selfS3a]],
+  ] : [
+    [t.selfT1, [t.selfT1a, t.selfT1b, t.selfT1c]],
+    [t.selfT2, [t.selfT2a]],
+    [t.selfT3, [t.selfT3a]],
   ];
 
-  const state = {
-    lang: "jp",         // jp | en
-    unit: "cm",         // cm | inch  (linked to lang)
-    productKey: products[0].key,
-    tableRows: [],
-    tableCols: [],
-    lastMatchIndex: null,
-    lastEstimatedChestCm: null,
-  };
+  const html = `
+    <details>
+      <summary>${escapeHtml(t.selfCheckTitle)}</summary>
+      <div class="selfCheckBody">
+        <ol>
+          ${items.map(([q, arr]) => `
+            <li>
+              <strong>${escapeHtml(q)}</strong><br>
+              ${arr.map(x => `• ${escapeHtml(x)}`).join("<br>")}
+            </li>
+          `).join("")}
+        </ol>
+      </div>
+    </details>
+  `;
 
-  const cache = new Map(); // url -> parsed rows
+  els.selfCheckWrap.innerHTML = html;
+  els.selfCheckWrap.hidden = false;
+}
 
-  // ---------- utilities ----------
-  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
-  const round1 = (n) => Math.round(n * 10) / 10;
+/* ---------- Result / Error ---------- */
+function clearResult(){
+  els.resultArea.hidden = true;
+  els.errorBox.hidden = true;
+  els.resultValue.textContent = "—";
+  els.resultDetail.textContent = "";
+  els.selfCheckWrap.hidden = true;
+  els.selfCheckWrap.innerHTML = "";
+  clearHighlight();
+}
 
-  function t() { return i18n[state.lang]; }
+function showError(){
+  els.resultArea.hidden = false;
+  els.errorBox.hidden = false;
+  els.resultValue.textContent = "—";
+  els.resultDetail.textContent = "";
+  els.selfCheckWrap.hidden = true;
+  els.selfCheckWrap.innerHTML = "";
+}
 
-  function isShoes(productKey){
-    return productKey.startsWith("slipon_");
+function showResult(sizeLabel, basis, bestIdx){
+  els.resultArea.hidden = false;
+  els.errorBox.hidden = true;
+
+  els.resultValue.textContent = sizeLabel;
+  els.resultDetail.textContent = basis;
+
+  renderSelfCheck(state.productType);
+
+  // highlight & scroll
+  highlightRow(bestIdx);
+}
+
+/* ---------- Actions ---------- */
+async function runCalc(){
+  clearHighlight();
+  els.btnSetEstimated.hidden = true; // will be shown only if estimate used & tops
+
+  if (!state.productKey){
+    showError();
+    return;
   }
 
-  function getProduct(){
-    return products.find(p => p.key === state.productKey) || products[0];
-  }
-
-  function setLang(next){
-    state.lang = next;
-    state.unit = (next === "jp") ? "cm" : "inch";
-    els.btnLangJP.setAttribute("aria-selected", String(next === "jp"));
-    els.btnLangEN.setAttribute("aria-selected", String(next === "en"));
-    applyI18n();
-    loadAndRenderCurrentProduct();
-  }
-
-  // parse numbers including unicode fractions (e.g., "18 ⅞", "10⅝", "10 1/4", "91/4")
-  const fracMap = {
-    "¼": 1/4, "½": 1/2, "¾": 3/4,
-    "⅛": 1/8, "⅜": 3/8, "⅝": 5/8, "⅞": 7/8,
-    "⅓": 1/3, "⅔": 2/3,
-    "⅕": 1/5, "⅖": 2/5, "⅗": 3/5, "⅘": 4/5,
-    "⅙": 1/6, "⅚": 5/6,
-    "⅐": 1/7, "⅑": 1/9, "⅒": 1/10,
-  };
-
-  function parseMixedNumber(v){
-    if (v == null) return NaN;
-    const s0 = String(v).trim();
-    if (!s0) return NaN;
-
-    // normalize: "10⅝" -> "10 ⅝"
-    let s = s0.replace(/(\d)([¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚⅐⅑⅒])/g, "$1 $2");
-
-    // "91/4" -> "9 1/4"
-    s = s.replace(/^(\d+)\s*(\d+)\/(\d+)$/, (_, a, b, c) => `${a} ${b}/${c}`);
-
-    // pure number
-    if (/^-?\d+(\.\d+)?$/.test(s)) return Number(s);
-
-    // "10 1/4"
-    let m = s.match(/^(-?\d+(\.\d+)?)\s+(\d+)\s*\/\s*(\d+)$/);
-    if (m){
-      const base = Number(m[1]);
-      const num = Number(m[3]);
-      const den = Number(m[4]);
-      return base + (den ? num/den : 0);
-    }
-
-    // "10 ⅝"
-    m = s.match(/^(-?\d+(\.\d+)?)\s+([¼½¾⅛⅜⅝⅞⅓⅔⅕⅖⅗⅘⅙⅚⅐⅑⅒])$/);
-    if (m){
-      const base = Number(m[1]);
-      return base + (fracMap[m[3]] ?? 0);
-    }
-
-    // only fraction char
-    if (fracMap[s] != null) return fracMap[s];
-
-    return NaN;
-  }
-
-  function toNumber(input){
-    const s = String(input ?? "").trim().replace(/,/g, "");
-    if (!s) return NaN;
-    const n = Number(s);
-    return Number.isFinite(n) ? n : NaN;
-  }
-
-  const cmToIn = (cm) => cm / 2.54;
-  const inToCm = (inch) => inch * 2.54;
-
-  // ---------- CSV ----------
-  async function loadCsv(url){
-    if (cache.has(url)) return cache.get(url);
-
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) throw new Error(`Failed to load: ${url}`);
-    const text = await res.text();
-
-    // simple CSV parser (no commas inside cells in our data)
-    const rows = text.split(/\r?\n/).map(r => r.trim()).filter(Boolean);
-    if (rows.length < 2) return { cols: [], data: [] };
-
-    const cols = rows[0].split(",").map(c => c.trim());
-    const data = rows.slice(1).map(line => {
-      const parts = line.split(",").map(p => p.trim());
-      const obj = {};
-      cols.forEach((c, i) => obj[c] = parts[i] ?? "");
-      return obj;
-    });
-
-    const parsed = { cols, data };
-    cache.set(url, parsed);
-    return parsed;
-  }
-
-  // ---------- recommendation logic ----------
-  function easeTop(){
-    // cm basis
-    const fit = els.fitTop.value;
-    if (fit === "snug") return (state.unit === "cm") ? 6 : cmToIn(6);
-    if (fit === "loose") return (state.unit === "cm") ? 14 : cmToIn(14);
-    return (state.unit === "cm") ? 10 : cmToIn(10);
-  }
-
-  function allowanceShoe(){
-    // mm basis
-    const v = els.fitShoe.value;
-    const mm = (v === "snug") ? 7 : (v === "loose") ? 12 : 10;
-    if (state.unit === "cm") return mm / 10;     // cm
-    return cmToIn(mm / 10);                      // inch
-  }
-
-  // Estimator (existing approach: BMI buckets + small sex adjustment)
-  function estimateChestCircumferenceCm(){
-    const h = toNumber(els.estHeight.value);
-    const w = toNumber(els.estWeight.value);
-    const bmiInput = toNumber(els.estBmi.value);
-
-    let bmi = bmiInput;
-    if (!Number.isFinite(bmi)){
-      if (!Number.isFinite(h) || !Number.isFinite(w) || h <= 0) return NaN;
-      const hm = h / 100;
-      bmi = w / (hm * hm);
-    }
-    if (!Number.isFinite(bmi)) return NaN;
-
-    const sex = els.estSex.value; // male|female
-
-    // bucket mapping (rough, as a support feature)
-    // baseline chest for female at given BMI
-    let chest = 78;
-    if (bmi < 17) chest = 74;
-    else if (bmi < 19) chest = 78;
-    else if (bmi < 21) chest = 82;
-    else if (bmi < 23) chest = 86;
-    else if (bmi < 25) chest = 90;
-    else if (bmi < 27) chest = 94;
-    else if (bmi < 29) chest = 98;
-    else chest = 104;
-
-    if (sex === "male") chest += 10; // typical offset
-
-    return chest;
-  }
-
-  function recommendTops(rows){
-    // rows: objects with Size, Chest (flat), Length, Sleeve length
-    const chestManual = toNumber(els.nudeChest.value);
-
-    let usedEst = false;
-    let estCm = null;
-    let chest = chestManual;
-
-    if (!Number.isFinite(chest)){
-      estCm = estimateChestCircumferenceCm();
-      if (Number.isFinite(estCm)){
-        chest = (state.unit === "cm") ? estCm : cmToIn(estCm);
-        usedEst = true;
-      }
-    }
-
-    if (!Number.isFinite(chest)) {
-      return { error: "need_input" };
-    }
-
-    const ease = easeTop();
-    const finishedChest = chest + ease;
-    const targetHalf = finishedChest / 2;
-
-    // pick smallest size where chartChestHalf >= targetHalf
-    const candidates = rows.map((r, idx) => {
-      const half = parseMixedNumber(r["Chest (flat)"]);
-      return { idx, half, size: r["Size"] };
-    }).filter(x => Number.isFinite(x.half)).sort((a,b)=>a.half-b.half);
-
-    const chosen = candidates.find(x => x.half >= targetHalf);
-    if (!chosen) return { error: "not_found" };
-
-    const detail = buildTopDetail({
-      nudeChest: chest,
-      usedEst,
-      estCm,
-      ease,
-      finishedChest,
-      targetHalf,
-      size: chosen.size
-    });
-
-    return { size: chosen.size, matchIndex: chosen.idx, detail, usedEst, estCm };
-  }
-
-  function buildTopDetail({nudeChest, usedEst, estCm, ease, finishedChest, targetHalf, size}){
-    const unit = state.unit;
-    const tt = t();
-    const chestTxt = format(nudeChest, unit);
-    const easeTxt = format(ease, unit);
-    const finTxt = format(finishedChest, unit);
-    const halfTxt = format(targetHalf, unit);
-
-    const estLine = usedEst
-      ? (state.lang === "jp"
-          ? `推定胸囲 ${Math.round(estCm)}cm を使用`
-          : `Used estimated chest ${Math.round(estCm)} cm`)
-      : "";
-
-    const line1 = (state.lang === "jp")
-      ? `胸囲 ${chestTxt} + ゆとり ${easeTxt} = 仕上がり胸囲 ${finTxt} → 1/2胸幅 ${halfTxt}`
-      : `Chest ${chestTxt} + ease ${easeTxt} = finished chest ${finTxt} → chest (flat) ${halfTxt}`;
-
-    const line2 = (state.lang === "jp")
-      ? `おすすめ：${size}`
-      : `Recommended: ${size}`;
-
-    return [estLine, line1, line2].filter(Boolean).join("\n");
-  }
-
-  function recommendShoes(rows){
-    const foot = toNumber(els.footLen.value);
-    if (!Number.isFinite(foot)) return { error: "need_input" };
-
-    const add = allowanceShoe();
-    const target = foot + add;
-
-    const candidates = rows.map((r, idx) => {
-      const fl = parseMixedNumber(r["Foot length"]);
-      return { idx, fl, row: r };
-    }).filter(x => Number.isFinite(x.fl)).sort((a,b)=>a.fl-b.fl);
-
-    const chosen = candidates.find(x => x.fl >= target);
-    if (!chosen) return { error: "not_found" };
-
-    // display size label differs by unit
-    const displaySize = (state.unit === "cm")
-      ? `${chosen.row["Size"]}`
-      : `US ${chosen.row["US"]} / UK ${chosen.row["UK"]} / EU ${chosen.row["EU"]}`;
-
-    const detail = buildShoeDetail({
-      foot,
-      add,
-      target,
-      row: chosen.row
-    });
-
-    return { size: displaySize, matchIndex: chosen.idx, detail };
-  }
-
-  function buildShoeDetail({foot, add, target, row}){
-    const unit = state.unit;
-    const footTxt = format(foot, unit);
-    const addTxt = format(add, unit);
-    const targetTxt = format(target, unit);
-
-    const line1 = (state.lang === "jp")
-      ? `足長 ${footTxt} + 捨て寸 ${addTxt} = 目安 ${targetTxt}`
-      : `Foot length ${footTxt} + allowance ${addTxt} = target ${targetTxt}`;
-
-    let line2 = "";
-    if (state.unit === "cm"){
-      line2 = (state.lang === "jp")
-        ? `おすすめ：サイズ ${row["Size"]}（足長 ${row["Foot length"]} / アウトソール ${row["Outsole length"]}）`
-        : `Recommended: size ${row["Size"]} (foot ${row["Foot length"]} / outsole ${row["Outsole length"]})`;
-    } else {
-      line2 = `US ${row["US"]} / UK ${row["UK"]} / EU ${row["EU"]} (foot ${row["Foot length"]}, outsole ${row["Outsole length"]})`;
-    }
-
-    return [line1, line2].join("\n");
-  }
-
-  function format(n, unit){
-    if (!Number.isFinite(n)) return "-";
-    if (unit === "cm"){
-      // show .1 for shoe cm values; otherwise integer is fine
-      const isInt = Math.abs(n - Math.round(n)) < 1e-9;
-      return isInt ? `${Math.round(n)}cm` : `${round1(n)}cm`;
-    }
-    // inch
-    return `${round1(n)}in`;
-  }
-
-  // ---------- UI render ----------
-  function applyI18n(){
-    const tt = t();
-
-    document.documentElement.lang = (state.lang === "jp") ? "ja" : "en";
-
-    els.pageTitle.textContent = tt.pageTitle;
-    els.pageSubtitle.textContent = tt.pageSubtitle;
-    els.backToShop.textContent = tt.backToShop;
-
-    els.labelProduct.textContent = tt.labelProduct;
-
-    // tops inputs
-    els.labelNudeChest.textContent = tt.labelNudeChest;
-    els.hintNudeChest.textContent = tt.hintNudeChest;
-    els.labelFitTop.textContent = tt.labelFitTop;
-    els.hintFitTop.textContent = tt.hintFitTop;
-
-    // estimator
-    els.estimateSummary.textContent = tt.estimateSummary;
-    els.labelHeight.textContent = tt.labelHeight;
-    els.labelWeight.textContent = tt.labelWeight;
-    els.labelSex.textContent = tt.labelSex;
-    // update sex select labels
-    const sexOptions = els.estSex.querySelectorAll("option");
-    sexOptions.forEach(opt => {
-      if (opt.value === "female") opt.textContent = tt.female;
-      if (opt.value === "male") opt.textContent = tt.male;
-    });
-    els.labelBMI.textContent = tt.labelBMI;
-    els.hintBMI.textContent = tt.hintBMI;
-    els.estimateNote.textContent = tt.estimateNote;
-    if (!els.btnSetEstimated.hidden) els.btnSetEstimated.textContent = tt.setEstimated;
-
-    // shoes inputs
-    els.labelFootLen.textContent = tt.labelFootLen;
-    els.hintFootLen.textContent = tt.hintFootLen;
-    els.labelFitShoe.textContent = tt.labelFitShoe;
-    els.hintFitShoe.textContent = tt.hintFitShoe;
-    els.shoesNote.textContent = tt.shoesNote;
-
-    // main buttons
-    els.calcBtn.textContent = tt.calcBtn;
-    els.btnReset.textContent = tt.btnReset;
-    els.btnScrollTable.textContent = tt.btnScrollTable;
-    els.btnHighlight.textContent = tt.btnHighlight;
-    els.btnFixInput.textContent = tt.btnFixInput;
-    els.btnGoTable.textContent = tt.btnGoTable;
-
-    // guide
-    els.guideTitle.textContent = tt.guideTitle;
-    els.guideCaption.textContent = tt.guideCaption;
-    els.notesTitle.textContent = tt.notesTitle;
-
-    // table
-    els.tableTitle.textContent = tt.tableTitle;
-    els.tableUnit.textContent = (state.unit === "cm") ? tt.tableUnitCm : tt.tableUnitIn;
-    els.tableNote.textContent = tt.tableNote;
-
-    // placeholders update
-    if (state.lang === "jp"){
-      els.nudeChest.placeholder = "例：99";
-      els.footLen.placeholder = "例：24.0";
-    } else {
-      els.nudeChest.placeholder = "e.g., 39.0";
-      els.footLen.placeholder = "e.g., 9.5";
-    }
-  }
-
-  function renderProductDropdown(){
-    // build options
-    els.productList.innerHTML = "";
-    products.forEach(p => {
-      const opt = document.createElement("div");
-      opt.className = "option";
-      opt.setAttribute("role", "option");
-      opt.dataset.key = p.key;
-
-      const title = document.createElement("div");
-      title.className = "optTitle";
-      const labelLines = (state.lang === "jp") ? p.labelJP : p.labelEN;
-      title.textContent = labelLines.join(" ");
-
-      const sub = document.createElement("div");
-      sub.className = "optSub";
-      sub.textContent = (p.type === "shoes")
-        ? (state.lang === "jp" ? "シューズ" : "Shoes")
-        : (p.type === "hoodie" ? (state.lang === "jp" ? "フーディ" : "Hoodie") : (state.lang === "jp" ? "Tシャツ" : "T-shirt"));
-
-      opt.appendChild(title);
-      opt.appendChild(sub);
-
-      opt.addEventListener("click", () => {
-        setProduct(p.key);
-        closeProductList();
-      });
-
-      els.productList.appendChild(opt);
-    });
-
-    updateProductButtonText();
-  }
-
-  function updateProductButtonText(){
-    const p = getProduct();
-    const labelLines = (state.lang === "jp") ? p.labelJP : p.labelEN;
-
-    els.productButtonText.innerHTML = "";
-    labelLines.forEach(line => {
-      const sp = document.createElement("span");
-      sp.textContent = line;
-      els.productButtonText.appendChild(sp);
-    });
-  }
-
-  function openProductList(){
-    els.productList.hidden = false;
-    els.productButton.setAttribute("aria-expanded", "true");
-  }
-  function closeProductList(){
-    els.productList.hidden = true;
-    els.productButton.setAttribute("aria-expanded", "false");
-  }
-  function toggleProductList(){
-    const isOpen = !els.productList.hidden;
-    if (isOpen) closeProductList(); else openProductList();
-  }
-
-  function setProduct(key){
-    state.productKey = key;
-    state.lastMatchIndex = null;
-    state.lastEstimatedChestCm = null;
-    clearResultAndError();
-    clearHighlight();
-    updateProductButtonText();
-    loadAndRenderCurrentProduct();
-  }
-
-  function clearResultAndError(){
-    els.result.hidden = true;
-    els.errorBox.hidden = true;
-    els.resultTitle.textContent = "";
-    els.resultValue.textContent = "";
-    els.resultDetail.textContent = "";
-    els.errorMsg.textContent = "";
-  }
-
-  function showError(kind){
-    const tt = t();
-    els.errorBox.hidden = false;
-    els.result.hidden = true;
-
-    if (kind === "need_input"){
-      els.errorMsg.textContent = (state.lang === "jp")
-        ? "必要な数値が未入力です。入力欄を確認してください。"
-        : "Required measurement is missing. Please check the inputs.";
-    } else {
-      els.errorMsg.textContent = tt.resultTitleNotFound;
-    }
-  }
-
-  function showResult(sizeText, detail){
-    const tt = t();
-    els.errorBox.hidden = true;
-    els.result.hidden = false;
-    els.resultTitle.textContent = tt.resultTitle;
-    els.resultValue.textContent = sizeText;
-    els.resultDetail.textContent = detail;
-  }
-
-  function renderNotes(){
-    const tt = t();
-    els.notesList.innerHTML = "";
-    const p = getProduct();
-    let arr = tt.notesTops;
-    if (p.noteSet === "hoodie") arr = [...tt.notesTops.slice(0,3), ...tt.notesHoodie];
-    if (p.noteSet === "shoes") arr = tt.notesShoes;
-
-    arr.forEach(line => {
-      const li = document.createElement("li");
-      li.textContent = line;
-      els.notesList.appendChild(li);
-    });
-  }
-
-  function renderInputs(){
-    const tt = t();
-    const p = getProduct();
-
-    const tops = (p.type !== "shoes");
-    els.inputsTops.hidden = !tops;
-    els.inputsShoes.hidden = tops;
-
-    // labels include unit
-    if (tops){
-      els.labelNudeChest.textContent = (state.lang === "jp")
-        ? `ヌード胸囲（${state.unit}）`
-        : `Nude chest (${state.unit})`;
-
-      // estimator button visibility: only meaningful for tops
-      els.btnSetEstimated.hidden = true;
-      state.lastEstimatedChestCm = null;
-
-    } else {
-      els.labelFootLen.textContent = (state.lang === "jp")
-        ? `足長（${state.unit}）`
-        : `Foot length (${state.unit})`;
-    }
-
-    // product hints
-    els.productHint.textContent = isShoes(state.productKey) ? tt.productHintShoes : tt.productHintTops;
-  }
-
-  async function loadAndRenderCurrentProduct(){
-    renderInputs();
-    renderNotes();
-
-    // guide image
-    const p = getProduct();
-    els.guideImg.src = p.guideImg;
-    els.guideImg.alt = (state.lang === "jp")
-      ? `測り方ガイド：${p.labelJP.join(" ")}`
-      : `How to measure: ${p.labelEN.join(" ")}`;
-
-    // load table
-    await loadTableForCurrent();
-  }
-
-  async function loadTableForCurrent(){
-    const p = getProduct();
-    const url = p.csv[state.unit];
-    try{
-      const { cols, data } = await loadCsv(url);
-      state.tableCols = cols;
-      state.tableRows = data;
-      renderTable(cols, data);
-    } catch(e){
-      state.tableCols = [];
-      state.tableRows = [];
-      renderTable([], []);
-      showError("not_found");
-      console.error(e);
-    }
-  }
-
-  function renderTable(cols, rows){
-    // header
-    els.tableHeadRow.innerHTML = "";
-    els.tableBody.innerHTML = "";
-    clearHighlight();
-
-    if (!cols.length){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<th>${state.lang === "jp" ? "読み込みエラー" : "Load error"}</th>`;
-      els.tableHeadRow.appendChild(tr);
+  if (state.productType === "tops"){
+    updateEstimatorUI();
+    const r = recommendTops();
+    if (!r.ok){
+      showError();
       return;
     }
-
-    const headerTr = document.createElement("tr");
-    cols.forEach(c => {
-      const th = document.createElement("th");
-      th.textContent = formatColumnLabel(c);
-      headerTr.appendChild(th);
-    });
-    els.tableHeadRow.appendChild(headerTr);
-
-    rows.forEach((r, idx) => {
-      const tr = document.createElement("tr");
-      tr.dataset.idx = String(idx);
-      cols.forEach(c => {
-        const td = document.createElement("td");
-        td.textContent = (r[c] ?? "");
-        tr.appendChild(td);
-      });
-      els.tableBody.appendChild(tr);
-    });
-
-    els.tableUnit.textContent = (state.unit === "cm") ? t().tableUnitCm : t().tableUnitIn;
+    showResult(r.sizeLabel, r.basis, r.bestIdx);
+    return;
   }
 
-  function formatColumnLabel(c){
-    const lang = state.lang;
-    // canonical columns
-    if (c === "Size") return (lang === "jp") ? "サイズ" : "Size";
-    if (c === "Chest (flat)") return (lang === "jp") ? "身幅（平置き）" : "Chest (flat)";
-    if (c === "Length") return (lang === "jp") ? "着丈" : "Length";
-    if (c === "Sleeve length") return (lang === "jp") ? "袖丈" : "Sleeve length";
-    if (c === "Foot length") return (lang === "jp") ? "足の長さ" : "Foot length";
-    if (c === "Outsole length") return (lang === "jp") ? "アウトソール長" : "Outsole length";
-    return c;
-  }
-
-  function clearHighlight(){
-    [...els.tableBody.querySelectorAll("tr.highlight")].forEach(tr => tr.classList.remove("highlight"));
-  }
-
-  function highlightRow(index){
-    if (index == null) return;
-    const tr = els.tableBody.querySelector(`tr[data-idx="${index}"]`);
-    if (!tr) return;
-
-    clearHighlight();
-    tr.classList.add("highlight");
-    tr.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  function scrollToTable(){
-    els.tableCard.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  // ---------- main action ----------
-  async function runCalc(){
-    clearResultAndError();
-    clearHighlight();
-
-    // ensure table loaded
-    if (!state.tableRows.length){
-      await loadTableForCurrent();
-      if (!state.tableRows.length){
-        showError("not_found");
-        return;
-      }
+  if (state.productType === "shoes"){
+    const r = recommendShoes();
+    if (!r.ok){
+      showError();
+      return;
     }
+    showResult(r.sizeLabel, r.basis, r.bestIdx);
+    return;
+  }
 
-    const p = getProduct();
-    let rec = null;
+  showError();
+}
 
-    if (p.type === "shoes"){
-      rec = recommendShoes(state.tableRows);
-      if (rec.error){
-        showError(rec.error);
-        return;
-      }
-      showResult(rec.size, rec.detail);
-      state.lastMatchIndex = rec.matchIndex;
+/* ---------- Events ---------- */
+function bind(){
+  // language tabs
+  els.langJP.addEventListener("click", ()=> setLang("jp"));
+  els.langEN.addEventListener("click", ()=> setLang("en"));
 
-    } else {
-      rec = recommendTops(state.tableRows);
-      if (rec.error){
-        showError(rec.error);
-        return;
-      }
-      showResult(rec.size, rec.detail);
-      state.lastMatchIndex = rec.matchIndex;
+  // dropdown
+  els.productBtn.addEventListener("click", ()=>{
+    const open = els.productMenu.hidden;
+    if (open) buildProductMenu();
+    openMenu(open);
+  });
 
-      // show "Set estimated" only if estimate was used
-      state.lastEstimatedChestCm = rec.usedEst ? rec.estCm : null;
-      if (els.btnSetEstimated){
-        const show = !!(rec.usedEst && Number.isFinite(rec.estCm) && p.type !== "shoes");
-        els.btnSetEstimated.hidden = !show;
-        if (show) els.btnSetEstimated.textContent = t().setEstimated;
-      }
+  document.addEventListener("click", (e)=>{
+    if (!els.productBtn.contains(e.target) && !els.productMenu.contains(e.target)){
+      openMenu(false);
     }
+  });
 
-    // highlight and scroll
-    if (state.lastMatchIndex != null){
-      scrollToTable();
-      highlightRow(state.lastMatchIndex);
-    }
-  }
+  document.addEventListener("keydown", (e)=>{
+    if (e.key === "Escape") openMenu(false);
+  });
 
-  // ---------- events ----------
-  function bindEvents(){
-    els.btnLangJP.addEventListener("click", () => setLang("jp"));
-    els.btnLangEN.addEventListener("click", () => setLang("en"));
+  // estimator updates
+  ["input","change"].forEach(evt=>{
+    els.height.addEventListener(evt, updateEstimatorUI);
+    els.weight.addEventListener(evt, updateEstimatorUI);
+    els.sex.addEventListener(evt, updateEstimatorUI);
+    els.nudeChest.addEventListener(evt, updateEstimatorUI);
+  });
 
-    // custom dropdown
-    els.productButton.addEventListener("click", toggleProductList);
-    document.addEventListener("click", (e) => {
-      if (!els.productSelect.contains(e.target)) closeProductList();
-    });
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeProductList();
-    });
+  // set estimated (manual apply)
+  els.btnSetEstimated.addEventListener("click", ()=>{
+    const estCm = state.lastEstimatedChestCm;
+    if (!isFinite(estCm)) return;
 
-    els.calcBtn.addEventListener("click", runCalc);
+    const v = (state.unit === "cm") ? Math.round(estCm) : round1(cmToIn(estCm));
+    els.nudeChest.value = String(v);
 
-    els.btnReset.addEventListener("click", () => {
-      els.nudeChest.value = "";
-      els.footLen.value = "";
-      els.result.hidden = true;
-      els.errorBox.hidden = true;
-      clearHighlight();
+    // hide set button after apply
+    els.btnSetEstimated.hidden = true;
 
-      state.lastMatchIndex = null;
-      state.lastEstimatedChestCm = null;
-      if (els.btnSetEstimated) els.btnSetEstimated.hidden = true;
-    });
+    runCalc();
+  });
 
-    els.btnScrollTable.addEventListener("click", () => {
-      scrollToTable();
-    });
+  // actions
+  els.calcBtn.addEventListener("click", runCalc);
 
-    els.btnHighlight.addEventListener("click", () => {
-      scrollToTable();
-      highlightRow(state.lastMatchIndex);
-    });
+  els.resetBtn.addEventListener("click", ()=>{
+    els.nudeChest.value = "";
+    els.footLen.value = "";
+    els.height.value = "";
+    els.weight.value = "";
+    els.bmi.value = "";
+    state.lastEstimatedChestCm = null;
+    state.usedEstimateInCalc = false;
+    els.estSummary.textContent = t.estSummaryNone;
+    els.btnSetEstimated.hidden = true;
+    clearResult();
+  });
 
-    els.btnFixInput.addEventListener("click", () => {
-      els.errorBox.hidden = true;
-    });
-    els.btnGoTable.addEventListener("click", () => {
-      scrollToTable();
-    });
+  els.scrollTableBtn.addEventListener("click", ()=>{
+    // scroll to chart
+    els.sizeTable.scrollIntoView({ behavior:"smooth", block:"start" });
+  });
 
-    // Set estimated -> nude chest input (1-tap, no auto overwrite)
-    els.btnSetEstimated?.addEventListener("click", () => {
-      const estCm = state.lastEstimatedChestCm;
-      if (!Number.isFinite(estCm)) return;
+  els.errorResetBtn.addEventListener("click", ()=> els.resetBtn.click());
+  els.errorTableBtn.addEventListener("click", ()=> els.scrollTableBtn.click());
+}
 
-      if (state.unit === "cm"){
-        els.nudeChest.value = String(Math.round(estCm));
-      } else {
-        const inch = cmToIn(estCm);
-        els.nudeChest.value = String(round1(inch));
-      }
+/* ---------- Init ---------- */
+function init(){
+  setLang("jp");
+  applyI18n();
+  refreshUnits();
+  buildProductMenu();
+  openMenu(false);
+  clearResult();
+  bind();
+}
 
-      // optional feedback (prepend)
-      const msg = t().msgSetEstimatedDone;
-      if (els.resultDetail.textContent){
-        els.resultDetail.textContent = `${msg}\n${els.resultDetail.textContent}`;
-      } else {
-        els.resultDetail.textContent = msg;
-      }
-
-      // re-calc based on the now-fixed nude input
-      runCalc();
-    });
-
-    // re-render on fit change (optional instant feedback)
-    els.fitTop.addEventListener("change", () => { clearResultAndError(); clearHighlight(); });
-    els.fitShoe.addEventListener("change", () => { clearResultAndError(); clearHighlight(); });
-  }
-
-  // ---------- init ----------
-  async function init(){
-    applyI18n();
-    bindEvents();
-    renderProductDropdown();
-    await loadAndRenderCurrentProduct();
-  }
-
-  init();
-})();
+init();
