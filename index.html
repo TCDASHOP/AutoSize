@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TCDA Auto Size Guide</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="btn ghost" id="btnBackToShop" href="https://www.tcda.shop/" target="_self" rel="noopener">Back to shop</a>
+
+    <div class="topbarRight">
+      <div class="seg" role="group" aria-label="Language">
+        <button class="segBtn isActive" id="btnLangJa" type="button">JP</button>
+        <button class="segBtn" id="btnLangEn" type="button">EN</button>
+      </div>
+
+      <div class="seg" role="group" aria-label="Units">
+        <button class="segBtn isActive" id="btnUnitCm" type="button">cm</button>
+        <button class="segBtn" id="btnUnitIn" type="button">inch</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h1 class="title" id="tTitle">サイズを自動でおすすめ</h1>
+      <p class="sub" id="tSubtitle">商品を選んで、必要な数値だけ入力してください。</p>
+
+      <div class="grid2">
+        <div class="field">
+          <label class="label" for="selProduct" id="tProduct">商品</label>
+          <select id="selProduct" class="control">
+            <option value="mens_crew" selected>Men's Crew Neck T-Shirt</option>
+            <option value="womens_crew">Women's Crew Neck T-Shirt</option>
+            <option value="unisex_hoodie">Recycled Unisex Hoodie</option>
+            <option value="unisex_zip_hoodie">Recycled Unisex Zip Hoodie</option>
+            <option value="slipon_womens">Women's Slip-On Canvas Shoes</option>
+            <option value="slipon_mens">Men's Slip-On Canvas Shoes</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label" id="tFit">好み（フィット感）</label>
+          <select id="selFit" class="control">
+            <option value="standard" selected id="tFitStd">標準</option>
+            <option value="snug" id="tFitSnug">ぴったり</option>
+            <option value="loose" id="tFitLoose">ゆったり</option>
+          </select>
+          <div class="hint" id="tFitHint">標準: +10cm / ぴったり: +6cm / ゆったり: +14cm（目安）</div>
+        </div>
+      </div>
+
+      <!-- TOPS input -->
+      <div id="blockTops" class="block">
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="inpNudeChest" id="tNudeChest">ヌード胸囲（cm）</label>
+            <input id="inpNudeChest" class="control" inputmode="decimal" placeholder="例：99" />
+            <div class="hint" id="tEstimatorNote">分からない場合は下の「推定入力」を使えます（自動で上書きしません）。</div>
+          </div>
+
+          <div class="field">
+            <label class="label" id="tPriority">優先</label>
+            <div class="seg wide" role="group" aria-label="Priority">
+              <button class="segBtn isActive" id="btnPriChest" type="button">胸囲優先</button>
+              <button class="segBtn" id="btnPriLength" type="button">着丈優先</button>
+            </div>
+            <div class="hint" id="tPriorityHint">同じ胸囲でも、丈（着丈）の好みで満足度が割れます。</div>
+          </div>
+        </div>
+
+        <details class="details" open>
+          <summary id="tEstimatorTitle">ヌード寸法が分からない場合（推定入力）</summary>
+
+          <div class="grid3">
+            <div class="field">
+              <label class="label" for="inpHeight" id="tHeight">身長（cm）</label>
+              <input id="inpHeight" class="control" inputmode="decimal" placeholder="例：170" />
+            </div>
+            <div class="field">
+              <label class="label" for="inpWeight" id="tWeight">体重（kg）</label>
+              <input id="inpWeight" class="control" inputmode="decimal" placeholder="例：60" />
+            </div>
+            <div class="field">
+              <label class="label" for="selSex" id="tSex">性別</label>
+              <select id="selSex" class="control">
+                <option value="female" selected id="tFemale">女性</option>
+                <option value="male" id="tMale">男性</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label class="label" for="inpBmi" id="tBmi">BMI（任意）</label>
+              <input id="inpBmi" class="control" inputmode="decimal" placeholder="空欄なら自動計算" />
+              <div class="hint" id="tBmiHint">空欄なら身長と体重から自動計算します。</div>
+            </div>
+            <div class="field">
+              <label class="label">&nbsp;</label>
+              <div class="row">
+                <button class="btn" id="btnEstimateChest" type="button">推定胸囲を計算</button>
+                <button class="btn ghost" id="btnSetEstimated" type="button">推定値をセット</button>
+              </div>
+              <div class="hint" id="tEstimatorResult">推定結果：—</div>
+            </div>
+          </div>
+
+          <div class="hint small" id="tEstimatorWarn">推定入力は補助機能です。精度を上げるには可能な限り実測してください。</div>
+        </details>
+      </div>
+
+      <!-- SHOES input -->
+      <div id="blockShoes" class="block hidden">
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="inpFootLen" id="tFootLen">足長（cm）</label>
+            <input id="inpFootLen" class="control" inputmode="decimal" placeholder="例：24.6" />
+            <div class="hint" id="tFootLenHint">両足を測って長い方を使ってください。</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="selFootWidth" id="tFootWidth">足幅</label>
+            <select id="selFootWidth" class="control">
+              <option value="standard" selected id="tWidthStd">標準</option>
+              <option value="narrow" id="tWidthNarrow">細め</option>
+              <option value="wide" id="tWidthWide">広め</option>
+            </select>
+            <div class="hint" id="tFootWidthHint">幅広／厚手ソックスの人は「次点（size up）」寄りがおすすめ。</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="field">
+            <label class="label" for="selAllowance" id="tAllowance">捨て寸（余裕）</label>
+            <select id="selAllowance" class="control">
+              <option value="10" selected data-mm="10" id="tAllowStd">標準（+10mm）</option>
+              <option value="7" data-mm="7" id="tAllowSnug">ぴったり（+7mm）</option>
+              <option value="12" data-mm="12" id="tAllowLoose">ゆったり（+12mm）</option>
+            </select>
+            <div class="hint" id="tAllowanceHint">アウトソール長は外寸です（参考）。足長として扱わないでください。</div>
+          </div>
+
+          <div class="field">
+            <label class="label">&nbsp;</label>
+            <div class="hint" id="tAllowanceExplain">標準: +10mm / ぴったり: +7mm / ゆったり: +12mm（目安）</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row actions">
+        <button class="btn primary" id="btnCalc" type="button">おすすめサイズを計算</button>
+        <button class="btn ghost" id="btnReview" type="button">入力を見直す</button>
+        <button class="btn ghost" id="btnPickFromChart" type="button">サイズ表で選ぶ</button>
+      </div>
+    </section>
+
+    <section class="card" id="cardResult">
+      <h2 class="title2" id="tResult">結果</h2>
+
+      <div class="resultGrid">
+        <div class="resultBox">
+          <div class="resultLabel" id="tPrimary">推奨</div>
+          <div class="resultValue" id="outPrimary">—</div>
+          <div class="resultReason" id="outPrimaryReason">—</div>
+        </div>
+
+        <div class="resultBox">
+          <div class="resultLabel" id="tRunnerUp">次点</div>
+          <div class="resultValue" id="outRunnerUp">—</div>
+          <div class="resultReason" id="outRunnerReason">—</div>
+        </div>
+      </div>
+
+      <div class="hint" id="tTwoRecNote">「次点」は、好み（丈優先／幅広など）のズレを吸収するための第2案です。</div>
+    </section>
+
+    <section class="card">
+      <h2 class="title2" id="tMeasure">測り方ガイド</h2>
+      <div class="hint" id="tMeasureNote">※画像は商品に応じて切り替わります / Image changes by product.</div>
+
+      <div class="imgFrame">
+        <img id="imgGuide" alt="How to measure guide" />
+      </div>
+
+      <div class="noteList" id="notesBox">
+        <h3 class="title3" id="tNotes">Notes when choosing</h3>
+        <ul id="ulNotes"></ul>
+      </div>
+    </section>
+
+    <section class="card" id="cardChart">
+      <div class="row spaceBetween">
+        <h2 class="title2" id="tChart">サイズ表</h2>
+
+        <div class="smallHint">
+          <span id="tChartDisplay">表示:</span>
+          <span id="chartUnitLabel">cm</span>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table class="table" id="tblChart"></table>
+      </div>
+
+      <div class="hint small" id="tChartWarn">※表の数値は仕上がり寸法です。測り方により±1〜2cm程度の差が出る場合があります。</div>
+    </section>
+
+    <section class="card">
+      <div class="row spaceBetween">
+        <h2 class="title2" id="tLog">提案サイズの記録（ローカル）</h2>
+        <div class="row">
+          <button class="btn ghost" id="btnExportLog" type="button">CSVで書き出し</button>
+          <button class="btn danger" id="btnClearLog" type="button">履歴を消去</button>
+        </div>
+      </div>
+
+      <div class="hint" id="tLogHint">
+        記録される内容：商品タイプ / 入力方式（実測・推定）/ 入力値 / フィット感 / 推奨・次点サイズ（自動記録）
+      </div>
+
+      <div id="logList" class="logList"></div>
+    </section>
+
+    <footer class="footer">
+      <div class="footerInner">
+        <span>© <span id="year"></span> Transcend Color Digital Apparel</span>
+      </div>
+    </footer>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>
