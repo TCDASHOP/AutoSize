@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>TCDA Auto Size Guide</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <a id="backToShop" class="backlink" href="https://www.tcda.shop/" rel="noopener">ショップに戻る</a>
+
+    <div class="langToggle" role="tablist" aria-label="Language">
+      <button class="pill" id="btnLangJP" type="button" aria-selected="true">JP</button>
+      <button class="pill" id="btnLangEN" type="button" aria-selected="false">EN</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <h1 id="pageTitle">サイズを自動でおすすめ</h1>
+      <p id="pageSubtitle" class="sub">商品を選んで、必要な数値だけ入力してください。</p>
+
+      <!-- Product picker -->
+      <div class="field">
+        <label id="labelProduct">商品</label>
+
+        <!-- Custom dropdown (2-line labels guaranteed) -->
+        <div class="select" id="productSelect">
+          <button id="productButton" class="selectBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span id="productButtonText" class="selectBtnText"></span>
+            <span class="selectChevron" aria-hidden="true">▾</span>
+          </button>
+          <div id="productList" class="selectList" role="listbox" tabindex="-1" hidden></div>
+        </div>
+
+        <p id="productHint" class="hint"></p>
+      </div>
+
+      <!-- Inputs (tops) -->
+      <div id="inputsTops" class="inputs" hidden>
+        <div class="grid2">
+          <div class="field">
+            <label id="labelNudeChest" for="nudeChest">ヌード胸囲（cm）</label>
+            <input id="nudeChest" inputmode="decimal" autocomplete="off" placeholder="例：99" />
+            <p id="hintNudeChest" class="hint"></p>
+          </div>
+
+          <div class="field">
+            <label id="labelFitTop" for="fitTop">好み（フィット感）</label>
+            <select id="fitTop">
+              <option value="standard" selected>標準</option>
+              <option value="snug">ぴったり</option>
+              <option value="loose">ゆったり</option>
+            </select>
+            <p id="hintFitTop" class="hint"></p>
+          </div>
+        </div>
+
+        <details class="est" id="estimateBox">
+          <summary id="estimateSummary">ヌード寸法が分からない場合（推定入力）</summary>
+
+          <div class="grid3">
+            <div class="field">
+              <label id="labelHeight" for="estHeight">身長（cm）</label>
+              <input id="estHeight" inputmode="decimal" autocomplete="off" placeholder="例：170" />
+            </div>
+            <div class="field">
+              <label id="labelWeight" for="estWeight">体重（kg）</label>
+              <input id="estWeight" inputmode="decimal" autocomplete="off" placeholder="例：60" />
+            </div>
+            <div class="field">
+              <label id="labelSex" for="estSex">性別</label>
+              <select id="estSex">
+                <option value="female" selected>女性</option>
+                <option value="male">男性</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label id="labelBMI" for="estBmi">BMI（任意）</label>
+              <input id="estBmi" inputmode="decimal" autocomplete="off" placeholder="空欄なら自動計算" />
+              <p id="hintBMI" class="hint"></p>
+            </div>
+
+            <div class="actions">
+              <button id="btnSetEstimated" class="pill secondary" type="button" hidden>推定値をセット</button>
+            </div>
+          </div>
+
+          <p id="estimateNote" class="note"></p>
+        </details>
+      </div>
+
+      <!-- Inputs (shoes) -->
+      <div id="inputsShoes" class="inputs" hidden>
+        <div class="grid2">
+          <div class="field">
+            <label id="labelFootLen" for="footLen">足長（cm）</label>
+            <input id="footLen" inputmode="decimal" autocomplete="off" placeholder="例：24.0" />
+            <p id="hintFootLen" class="hint"></p>
+          </div>
+
+          <div class="field">
+            <label id="labelFitShoe" for="fitShoe">好み（捨て寸）</label>
+            <select id="fitShoe">
+              <option value="standard" data-jp="標準（+10mm）" data-en="Standard (+0.39 in)">標準（+10mm）</option>
+              <option value="snug" data-jp="ぴったり（+7mm）" data-en="Snug (+0.28 in)">ぴったり（+7mm）</option>
+              <option value="loose" data-jp="ゆったり（+12mm）" data-en="Loose (+0.47 in)">ゆったり（+12mm）</option>
+            </select>
+            <p id="hintFitShoe" class="hint"></p>
+          </div>
+        </div>
+
+        <p id="shoesNote" class="note"></p>
+      </div>
+
+      <div class="actions mainActions">
+        <button id="calcBtn" class="primary" type="button">おすすめサイズを計算</button>
+        <button id="btnReset" class="pill" type="button">入力を見直す</button>
+        <button id="btnScrollTable" class="pill pill-secondary" type="button">サイズ表で選ぶ</button>
+      </div>
+
+      <!-- Result -->
+      <section id="result" class="result" aria-live="polite" hidden>
+        <div class="resultTop">
+          <div class="resultTitle" id="resultTitle"></div>
+          <div class="resultValue" id="resultValue"></div>
+        </div>
+
+        <div class="resultDetail" id="resultDetail"></div>
+
+        <div class="resultActions">
+          <button id="btnHighlight" class="pill" type="button">サイズ表で該当行を見る</button>
+        </div>
+      </section>
+
+      <section id="errorBox" class="error" hidden>
+        <div id="errorMsg" class="errorMsg"></div>
+        <div class="actions">
+          <button id="btnFixInput" class="pill" type="button">入力を見直す</button>
+          <button id="btnGoTable" class="pill pill-secondary" type="button">サイズ表で選ぶ</button>
+        </div>
+      </section>
+    </section>
+
+    <!-- Guide image -->
+    <section class="card">
+      <h2 id="guideTitle">測り方ガイド</h2>
+      <p id="guideCaption" class="sub">※ 画像は商品に応じて切り替わります / Image changes by product.</p>
+      <div class="guideBox">
+        <img id="guideImg" alt="" loading="lazy" />
+      </div>
+
+      <div class="notes" id="notesBox">
+        <h3 id="notesTitle">選ぶときの注意事項</h3>
+        <ul id="notesList"></ul>
+      </div>
+    </section>
+
+    <!-- Table -->
+    <section class="card" id="tableCard">
+      <div class="tableHead">
+        <h2 id="tableTitle">サイズ表</h2>
+        <div class="tableMeta">
+          <span id="tableUnit"></span>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table id="sizeTable">
+          <thead id="tableHeadRow"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <p id="tableNote" class="hint"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footerInner">
+      <img id="footerLogo" class="logo" src="assets/logo.png" alt="Transcend Color Digital Apparel" />
+      <div class="copy">© 2025 Transcend Color Digital Apparel</div>
+    </div>
+  </footer>
+
+  <!-- cache-busting: update the version when you deploy changes -->
+  <script src="app.js?v=20251220"></script>
+</body>
+</html>
