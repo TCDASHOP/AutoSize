@@ -5,4 +5,4 @@ unisex_hoodie,hoodie,Unisex,Hoodie,Unisex,Hoodie,assets/guide_hoodie.jpg,data/un
 unisex_zip_hoodie,hoodie,Unisex ZIP,Hoodie,Unisex ZIP,Hoodie,assets/guide_zip_hoodie.jpg,data/unisex_zip_hoodie_cm.csv,data/unisex_zip_hoodie_inch.csv,hoodie,1,40
 slipon_womens,shoes,Women's Slip-On,Canvas Shoes,Women's Slip-On,Canvas Shoes,assets/guide_slipon.jpg,data/slipon_womens_cm.csv,data/slipon_womens_inch.csv,shoes,1,50
 slipon_mens,shoes,Men's Slip-On,Canvas Shoes,Men's Slip-On,Canvas Shoes,assets/guide_slipon.jpg,data/slipon_mens_cm.csv,data/slipon_mens_inch.csv,shoes,1,60
-unisex_battenberg_shirt,tops,Unisex Battenberg,Shirt,Unisex Battenberg,Shirt,assets/unisex_battenberg_shirt.jpeg,data/unisex_battenberg_shirt_cm.csv,data/unisex_battenberg_shirt_inch.csv,tops,1,70
+unisex_battenberg_shirt,tops,ユニセックス,バテンバーグシャツ,Unisex Battenberg,Shirt,assets/unisex_battenberg_shirt.jpeg,data/unisex_battenberg_shirt_cm.csv,data/unisex_battenberg_shirt_inch.csv,tops,1,70
