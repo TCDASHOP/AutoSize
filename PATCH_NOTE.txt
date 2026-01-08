@@ -1,0 +1,9 @@
+【差し替え（最小）】
+- AutoSize-main/data/products_master.csv をこのファイルで上書き
+- その後、Pythonista 3で AutoSize-main/tools/build_all.py を実行して manifest.json を再生成
+- GitHubへ push
+
+【動作確認（本番を壊さないチェック）】
+1) /data/manifest.json が開ける（404にならない）
+2) サイズガイドの「商品」ドロップダウンが6商品表示される
+3) unisex_zip_hoodie で測り方画像が guide_zip_hoodie.jpg に切り替わる
