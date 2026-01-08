@@ -469,11 +469,27 @@ async function setLang(next){
     const text = await res.text();
 
     // simple CSV parser (no commas inside cells in our data)
-    const rows = text.split(/\r?\n/).map(r => r.trim()).filter(Boolean);
-    if (rows.length < 2) return { cols: [], data: [] };
+    // NOTE: Some editors accidentally add a junk first line like ",,,".
+    // We robustly find the first "real" header line.
+    const rawLines = text.split(/\r?\n/);
+    const cleaned = rawLines
+      .map(l => (l ?? "").replace(/^\uFEFF/, "").trim()) // strip UTF-8 BOM + trim
+      .filter(l => l.length > 0);
 
-    const cols = rows[0].split(",").map(c => c.trim());
-    const data = rows.slice(1).map(line => {
+    if (cleaned.length < 2) return { cols: [], data: [] };
+
+    const looksLikeHeader = (line) => {
+      const lower = line.toLowerCase();
+      // We accept common header markers in this project.
+      return lower.includes("size") || line.includes("サイズ") || line.includes("胸") || line.includes("length") || line.includes("長さ");
+    };
+    // Pick the first plausible header line (skipping ",,," and similar junk)
+    let headerIndex = cleaned.findIndex(looksLikeHeader);
+    if (headerIndex === -1) headerIndex = 0;
+
+    const cols = cleaned[headerIndex].split(",").map(c => c.trim().replace(/^\uFEFF/, ""));
+    const dataLines = cleaned.slice(headerIndex + 1);
+    const data = dataLines.map(line => {
       const parts = line.split(",").map(p => p.trim());
       const obj = {};
       cols.forEach((c, i) => obj[c] = parts[i] ?? "");
@@ -552,8 +568,35 @@ function neighborInSorted(sorted, idx, dir){
   return sorted[npos];
 }
 
+// CSV header variations support (EN/JP, case differences)
+function pickCell(row, candidates){
+  for (const key of candidates){
+    if (row[key] != null && String(row[key]).trim() !== "") return row[key];
+  }
+  // case-insensitive fallback (handles "size" vs "Size" and BOM variations)
+  const lowerMap = {};
+  for (const k in row){
+    lowerMap[k.toLowerCase()] = k;
+  }
+  for (const key of candidates){
+    const k = lowerMap[String(key).toLowerCase()];
+    if (k && row[k] != null && String(row[k]).trim() !== "") return row[k];
+  }
+  return "";
+}
+
+const SIZE_KEYS   = ["Size","size","SIZE","サイズ"];
+const CHEST_KEYS  = ["Chest (flat)","Chest (Flat)","1/2 Chest","1/2 Chest Width","1/2胸幅","胸幅"];
+const LENGTH_KEYS = ["Length","length","長さ","着丈"];
+const SLEEVE_KEYS = ["Sleeve length","Sleeve Length","sleeve length","袖の長さ","袖丈"];
+
 function chooseByChest(rows, targetHalf){
-  const sorted = rows.map((r, idx) => ({ idx, size: r["Size"], half: parseMixedNumber(r["Chest (flat)"]), row: r }))
+  const sorted = rows.map((r, idx) => ({
+      idx,
+      size: pickCell(r, SIZE_KEYS),
+      half: parseMixedNumber(pickCell(r, CHEST_KEYS)),
+      row: r
+    }))
     .filter(x => Number.isFinite(x.half))
     .sort((a,b)=>a.half-b.half);
 
@@ -569,9 +612,9 @@ function chooseByChest(rows, targetHalf){
 function chooseByLength(rows, targetHalf, idealLen){
   const sorted = rows.map((r, idx) => ({
       idx,
-      size: r["Size"],
-      half: parseMixedNumber(r["Chest (flat)"]),
-      len: parseMixedNumber(r["Length"]),
+      size: pickCell(r, SIZE_KEYS),
+      half: parseMixedNumber(pickCell(r, CHEST_KEYS)),
+      len: parseMixedNumber(pickCell(r, LENGTH_KEYS)),
       row: r
     }))
     .filter(x => Number.isFinite(x.half))
@@ -767,7 +810,7 @@ function recommendShoesMulti(rows){
   }
 
   const primarySizeText = (state.unit === "cm")
-    ? `${chosen.row["Size"]}`
+    ? `${pickCell(chosen.row, KEYS_SIZE)}`
     : `US ${chosen.row["US"]} / UK ${chosen.row["UK"]} / EU ${chosen.row["EU"]}`;
 
   const detail = buildShoeDetail({
@@ -875,7 +918,7 @@ function recommendTops(rows){
 
     // display size label differs by unit
     const displaySize = (state.unit === "cm")
-      ? `${chosen.row["Size"]}`
+      ? `${pickCell(chosen.row, KEYS_SIZE)}`
       : `US ${chosen.row["US"]} / UK ${chosen.row["UK"]} / EU ${chosen.row["EU"]}`;
 
     const detail = buildShoeDetail({
@@ -901,8 +944,8 @@ function recommendTops(rows){
     let line2 = "";
     if (state.unit === "cm"){
       line2 = (state.lang === "jp")
-        ? `おすすめ：サイズ ${row["Size"]}（足長 ${row["Foot length"]} / アウトソール ${row["Outsole length"]}）`
-        : `Recommended: size ${row["Size"]} (foot ${row["Foot length"]} / outsole ${row["Outsole length"]})`;
+        ? `おすすめ：サイズ ${pickCell(row, KEYS_SIZE)}（足長 ${row["Foot length"]} / アウトソール ${row["Outsole length"]}）`
+        : `Recommended: size ${pickCell(row, KEYS_SIZE)} (foot ${row["Foot length"]} / outsole ${row["Outsole length"]})`;
     } else {
       line2 = `US ${row["US"]} / UK ${row["UK"]} / EU ${row["EU"]} (foot ${row["Foot length"]}, outsole ${row["Outsole length"]})`;
     }
