@@ -1,0 +1,7 @@
+key,type,label_jp_1,label_jp_2,label_en_1,label_en_2,guide_img,csv_cm,csv_inch,note_set,enabled,sort
+mens_crew,tops,Men's Crew Neck,T-Shirt,Men's Crew Neck,T-Shirt,assets/guide_tshirt.jpg,data/mens_crew_cm.csv,data/mens_crew_inch.csv,tops,1,10
+womens_crew,tops,Women's Crew Neck,T-Shirt,Women's Crew Neck,T-Shirt,assets/guide_tshirt.jpg,data/womens_crew_cm.csv,data/womens_crew_inch.csv,tops,1,20
+unisex_hoodie,hoodie,Unisex,Hoodie,Unisex,Hoodie,assets/guide_hoodie.jpg,data/unisex_hoodie_cm.csv,data/unisex_hoodie_inch.csv,hoodie,1,30
+unisex_zip_hoodie,hoodie,Unisex ZIP,Hoodie,Unisex ZIP,Hoodie,assets/guide_zip_hoodie.jpg,data/unisex_zip_hoodie_cm.csv,data/unisex_zip_hoodie_inch.csv,hoodie,1,40
+slipon_womens,shoes,Women's Slip-On,Canvas Shoes,Women's Slip-On,Canvas Shoes,assets/guide_slipon.jpg,data/slipon_womens_cm.csv,data/slipon_womens_inch.csv,shoes,1,50
+slipon_mens,shoes,Men's Slip-On,Canvas Shoes,Men's Slip-On,Canvas Shoes,assets/guide_slipon.jpg,data/slipon_mens_cm.csv,data/slipon_mens_inch.csv,shoes,1,60

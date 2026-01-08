@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "generated_at": "2026-01-08T03:44:44+00:00",
+  "products": [
+    {
+      "key": "mens_crew",
+      "type": "tops",
+      "labelJP": [
+        "Men's Crew Neck",
+        "T-Shirt"
+      ],
+      "labelEN": [
+        "Men's Crew Neck",
+        "T-Shirt"
+      ],
+      "guideImg": "assets/guide_tshirt.jpg",
+      "csv": {
+        "cm": "data/mens_crew_cm.csv",
+        "inch": "data/mens_crew_inch.csv"
+      },
+      "noteSet": "tops"
+    },
+    {
+      "key": "womens_crew",
+      "type": "tops",
+      "labelJP": [
+        "Women's Crew Neck",
+        "T-Shirt"
+      ],
+      "labelEN": [
+        "Women's Crew Neck",
+        "T-Shirt"
+      ],
+      "guideImg": "assets/guide_tshirt.jpg",
+      "csv": {
+        "cm": "data/womens_crew_cm.csv",
+        "inch": "data/womens_crew_inch.csv"
+      },
+      "noteSet": "tops"
+    },
+    {
+      "key": "unisex_hoodie",
+      "type": "hoodie",
+      "labelJP": [
+        "Unisex",
+        "Hoodie"
+      ],
+      "labelEN": [
+        "Unisex",
+        "Hoodie"
+      ],
+      "guideImg": "assets/guide_hoodie.jpg",
+      "csv": {
+        "cm": "data/unisex_hoodie_cm.csv",
+        "inch": "data/unisex_hoodie_inch.csv"
+      },
+      "noteSet": "hoodie"
+    },
+    {
+      "key": "unisex_zip_hoodie",
+      "type": "hoodie",
+      "labelJP": [
+        "Unisex ZIP",
+        "Hoodie"
+      ],
+      "labelEN": [
+        "Unisex ZIP",
+        "Hoodie"
+      ],
+      "guideImg": "assets/guide_zip_hoodie.jpg",
+      "csv": {
+        "cm": "data/unisex_zip_hoodie_cm.csv",
+        "inch": "data/unisex_zip_hoodie_inch.csv"
+      },
+      "noteSet": "hoodie"
+    },
+    {
+      "key": "slipon_womens",
+      "type": "shoes",
+      "labelJP": [
+        "Women's Slip-On",
+        "Canvas Shoes"
+      ],
+      "labelEN": [
+        "Women's Slip-On",
+        "Canvas Shoes"
+      ],
+      "guideImg": "assets/guide_slipon.jpg",
+      "csv": {
+        "cm": "data/slipon_womens_cm.csv",
+        "inch": "data/slipon_womens_inch.csv"
+      },
+      "noteSet": "shoes"
+    },
+    {
+      "key": "slipon_mens",
+      "type": "shoes",
+      "labelJP": [
+        "Men's Slip-On",
+        "Canvas Shoes"
+      ],
+      "labelEN": [
+        "Men's Slip-On",
+        "Canvas Shoes"
+      ],
+      "guideImg": "assets/guide_slipon.jpg",
+      "csv": {
+        "cm": "data/slipon_mens_cm.csv",
+        "inch": "data/slipon_mens_inch.csv"
+      },
+      "noteSet": "shoes"
+    }
+  ]
+}
