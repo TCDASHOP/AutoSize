@@ -114,12 +114,12 @@
       "key": "unisex_battenberg_shirt",
       "type": "tops",
       "labelJP": [
-        "Unisex Battenberg",
-        "Shirt"
+        "unisex battenberg",
+        "shirt"
       ],
       "labelEN": [
-        "Unisex Battenberg",
-        "Shirt"
+        "unisex battenberg",
+        "shirt"
       ],
       "guideImg": "assets/unisex_battenberg_shirt.jpeg",
       "csv": {
