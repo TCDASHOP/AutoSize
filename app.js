@@ -252,7 +252,7 @@
   };
 
   // Data sources (cleaned CSVs)
-  const products = [
+  const productsFallback = [
     {
       key: "mens_crew",
       type: "tops",
@@ -308,6 +308,39 @@
       noteSet: "shoes"
     },
   ];
+
+  // Runtime products (prefer data/manifest.json, fallback to baked list)
+  let products = productsFallback;
+
+  async function tryLoadManifestProducts(){
+    try {
+      const res = await fetch("data/manifest.json", { cache: "no-store" });
+      if (!res.ok) return false;
+      const j = await res.json();
+      if (!j || !Array.isArray(j.products) || j.products.length === 0) return false;
+
+      // Minimal validation to avoid breaking production UI
+      const ok = j.products.every(p =>
+        p && typeof p.key === "string" && p.key &&
+        typeof p.type === "string" &&
+        Array.isArray(p.labelJP) && Array.isArray(p.labelEN) &&
+        typeof p.guideImg === "string" &&
+        p.csv && typeof p.csv.cm === "string" && typeof p.csv.inch === "string" &&
+        typeof p.noteSet === "string"
+      );
+      if (!ok) return false;
+
+      products = j.products;
+
+      // If current selection isn't present, pick the first product.
+      if (!products.find(p => p.key === state.productKey)) {
+        state.productKey = products[0].key;
+      }
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
 
   const state = {
     lang: "jp",         // jp | en
@@ -1545,6 +1578,7 @@ async function runCalc(opts = {}){
   async function init(){
     applyI18n();
     bindEvents();
+    await tryLoadManifestProducts();
     renderProductDropdown();
     await loadAndRenderCurrentProduct();
   }
