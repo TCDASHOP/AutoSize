@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-01-08T03:44:44+00:00",
+  "generated_at": "2026-01-08T09:19:25+00:00",
   "products": [
     {
       "key": "mens_crew",
@@ -109,6 +109,24 @@
         "inch": "data/slipon_mens_inch.csv"
       },
       "noteSet": "shoes"
+    },
+    {
+      "key": "unisex_battenberg_shirt",
+      "type": "tops",
+      "labelJP": [
+        "ユニセックス",
+        "バテンバーグシャツ"
+      ],
+      "labelEN": [
+        "Unisex Battenberg",
+        "Shirt"
+      ],
+      "guideImg": "assets/unisex_battenberg_shirt.jpeg",
+      "csv": {
+        "cm": "data/unisex_battenberg_shirt_cm.csv",
+        "inch": "data/unisex_battenberg_shirt_inch.csv"
+      },
+      "noteSet": "tops"
     }
   ]
 }
