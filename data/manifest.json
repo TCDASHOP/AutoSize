@@ -18,7 +18,11 @@
         "cm": "data/mens_crew_cm.csv",
         "inch": "data/mens_crew_inch.csv"
       },
-      "noteSet": "tops"
+      "noteSet": "tops",
+      "bodyCsv": {
+        "cm": "data/mens_crew_body_cm.csv",
+        "inch": "data/mens_crew_body_inch.csv"
+      }
     },
     {
       "key": "womens_crew",
@@ -36,7 +40,11 @@
         "cm": "data/womens_crew_cm.csv",
         "inch": "data/womens_crew_inch.csv"
       },
-      "noteSet": "tops"
+      "noteSet": "tops",
+      "bodyCsv": {
+        "cm": "data/womens_crew_body_cm.csv",
+        "inch": "data/womens_crew_body_inch.csv"
+      }
     },
     {
       "key": "unisex_hoodie",
@@ -54,7 +62,11 @@
         "cm": "data/unisex_hoodie_cm.csv",
         "inch": "data/unisex_hoodie_inch.csv"
       },
-      "noteSet": "hoodie"
+      "noteSet": "hoodie",
+      "bodyCsv": {
+        "cm": "data/unisex_hoodie_body_cm.csv",
+        "inch": "data/unisex_hoodie_body_inch.csv"
+      }
     },
     {
       "key": "unisex_zip_hoodie",
@@ -72,7 +84,11 @@
         "cm": "data/unisex_zip_hoodie_cm.csv",
         "inch": "data/unisex_zip_hoodie_inch.csv"
       },
-      "noteSet": "hoodie"
+      "noteSet": "hoodie",
+      "bodyCsv": {
+        "cm": "data/unisex_zip_hoodie_body_cm.csv",
+        "inch": "data/unisex_zip_hoodie_body_inch.csv"
+      }
     },
     {
       "key": "slipon_womens",
@@ -126,7 +142,11 @@
         "cm": "data/unisex_battenberg_shirt_cm.csv",
         "inch": "data/unisex_battenberg_shirt_inch.csv"
       },
-      "noteSet": "tops"
+      "noteSet": "tops",
+      "bodyCsv": {
+        "cm": "data/unisex_battenberg_shirt_body_cm.csv",
+        "inch": "data/unisex_battenberg_shirt_body_inch.csv"
+      }
     }
   ]
 }
