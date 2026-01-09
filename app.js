@@ -31,6 +31,18 @@
     fitTop: document.getElementById("fitTop"),
     hintFitTop: document.getElementById("hintFitTop"),
 
+    // NEW: "measure your garment" inputs
+    garmentBox: document.getElementById("garmentBox"),
+    garmentSummary: document.getElementById("garmentSummary"),
+    garmentNote: document.getElementById("garmentNote"),
+    labelGarmentChest: document.getElementById("labelGarmentChest"),
+    garmentChest: document.getElementById("garmentChest"),
+    hintGarmentChest: document.getElementById("hintGarmentChest"),
+    labelGarmentLength: document.getElementById("labelGarmentLength"),
+    garmentLength: document.getElementById("garmentLength"),
+    hintGarmentLength: document.getElementById("hintGarmentLength"),
+
+
     // NEW: tops priority toggle
     topPriorityBox: document.getElementById("topPriorityBox"),
     labelTopPriority: document.getElementById("labelTopPriority"),
@@ -152,6 +164,7 @@
 
       resultTitle: "おすすめ",
       resultTitleNotFound: "該当するサイズが見当たりませんでした。",
+      invalidInput: "入力値が不自然です。単位（cm/in）や桁ミスを確認してください。",
       btnHighlight: "サイズ表で該当行を見る",
       btnFixInput: "入力を見直す",
       btnGoTable: "サイズ表で選ぶ",
@@ -229,6 +242,7 @@
 
       resultTitle: "Recommended",
       resultTitleNotFound: "No matching size was found.",
+      invalidInput: "The value looks invalid. Please check units and typos.",
       btnHighlight: "Show the matching row",
       btnFixInput: "Review inputs",
       btnGoTable: "Choose from size chart",
@@ -459,6 +473,30 @@ async function setLang(next){
     return Number.isFinite(n) ? n : NaN;
   }
 
+  function inRange(n, min, max){
+    return Number.isFinite(n) && n >= min && n <= max;
+  }
+
+  function getRange(key){
+    // Ranges are intentionally generous to avoid false negatives.
+    // key: "nude_chest", "flat_chest", "length", "foot"
+    const u = state.unit; // "cm" or "in"
+    if (key === "nude_chest"){
+      return (u === "cm") ? [60, 160] : [24, 70];
+    }
+    if (key === "flat_chest"){
+      return (u === "cm") ? [30, 100] : [12, 40];
+    }
+    if (key === "length"){
+      return (u === "cm") ? [40, 120] : [16, 50];
+    }
+    if (key === "foot"){
+      return (u === "cm") ? [18, 34] : [7, 13.5];
+    }
+    return (u === "cm") ? [0, 9999] : [0, 9999];
+  }
+
+
   const cmToIn = (cm) => cm / 2.54;
   const inToCm = (inch) => inch * 2.54;
 
@@ -679,6 +717,86 @@ function buildTopDetailMulti({ usedEst, estCm, nudeChest, ease, finishedChest, t
 }
 
 function recommendTopsMulti(rows){
+  // Mode A: "measure your garment" (flat chest is required; length optional)
+  const garmentHalf = toNumber(els.garmentChest?.value);
+  const garmentLen  = toNumber(els.garmentLength?.value);
+
+  if (Number.isFinite(garmentHalf)){
+    const [minHalf, maxHalf] = getRange("flat_chest");
+    if (!inRange(garmentHalf, minHalf, maxHalf)) return { error: "invalid_input" };
+
+    if (Number.isFinite(garmentLen)){
+      const [minL, maxL] = getRange("length");
+      if (!inRange(garmentLen, minL, maxL)) return { error: "invalid_input" };
+    }
+
+    const byChest = chooseByChest(rows, garmentHalf);
+    if (byChest.error) return { error: byChest.error };
+
+    let byLen = null;
+    let idealLen = NaN;
+    if (Number.isFinite(garmentLen)){
+      idealLen = garmentLen;
+      byLen = chooseByLength(rows, garmentHalf, idealLen);
+      if (byLen.error) byLen = null;
+    }
+
+    // fallback runner-up if length not provided (or not found)
+    if (!byLen){
+      byLen = { chosen: byChest.alt || neighborInSorted(byChest.sorted, byChest.chosen.idx, +1) || neighborInSorted(byChest.sorted, byChest.chosen.idx, -1), alt: null, sorted: byChest.sorted };
+    }
+
+    // Decide primary & runner-up based on toggle
+    let primary = byChest.chosen;
+    let alt = byLen.chosen;
+    let lengthModeUsed = false;
+
+    if (state.topPriority === "length" && Number.isFinite(garmentLen)){
+      primary = byLen.chosen;
+      alt = byChest.chosen;
+      lengthModeUsed = true;
+    } else {
+      primary = byChest.chosen;
+      alt = Number.isFinite(garmentLen) ? byLen.chosen : (byChest.alt || byLen.chosen);
+      lengthModeUsed = false;
+    }
+
+    // Ensure alt differs
+    if (alt && alt.idx === primary.idx){
+      alt = neighborInSorted(byChest.sorted, primary.idx, +1) || neighborInSorted(byChest.sorted, primary.idx, -1);
+    }
+
+    const unit = state.unit;
+    const line1 = (state.lang === "jp")
+      ? `手持ちの服：身幅（平置き） ${format(garmentHalf, unit)}` + (Number.isFinite(garmentLen) ? ` / 着丈 ${format(garmentLen, unit)}` : "")
+      : `Your garment: chest (flat) ${format(garmentHalf, unit)}` + (Number.isFinite(garmentLen) ? ` / length ${format(garmentLen, unit)}` : "");
+
+    const line2 = (state.lang === "jp")
+      ? `推奨：${primary.size}` + (alt ? ` / 次点：${alt.size}` : "")
+      : `Recommended: ${primary.size}` + (alt ? ` / Runner-up: ${alt.size}` : "");
+
+    const line3 = (state.lang === "jp")
+      ? "※このモードは「今ちょうど良い服」の寸法に合わせて選びます（ゆとり計算は使いません）。"
+      : "Note: This mode matches the measurements of a garment that already fits you (no ease calculation).";
+
+    const detail = [line1, line2, line3].filter(Boolean).join("\n");
+
+    const altText = alt ? runnerUpLabelTops(primary, alt) : "";
+
+    return {
+      primary: { size: primary.size, matchIndex: primary.idx },
+      alt: alt ? { size: alt.size, matchIndex: alt.idx, label: altText } : null,
+      detail,
+      usedEst: false,
+      estCm: null,
+      chestUsed: NaN,
+      inputMethod: "garment",
+      heightCm: null,
+      idealLen
+    };
+  }
+
+  // Mode B: Nude chest (measured / estimated)
   const chestManual = toNumber(els.nudeChest.value);
 
   let usedEst = false;
@@ -692,9 +810,16 @@ function recommendTopsMulti(rows){
       usedEst = true;
     }
   }
+
   if (!Number.isFinite(chest)) return { error: "need_input" };
 
-  const ease = easeTop();
+  // basic sanity check for manual input
+  if (!usedEst){
+    const [minC, maxC] = getRange("nude_chest");
+    if (!inRange(chest, minC, maxC)) return { error: "invalid_input" };
+  }
+
+  const ease = getEaseTop();
   const finishedChest = chest + ease;
   const targetHalf = finishedChest / 2;
 
@@ -711,12 +836,11 @@ function recommendTopsMulti(rows){
     idealLen = clamp((hCm * 0.40), 58, 86);
     if (state.unit !== "cm") idealLen = cmToIn(idealLen);
     byLen = chooseByLength(rows, targetHalf, idealLen);
-  } else {
-    byLen = { chosen: byChest.alt || byChest.chosen, alt: byChest.chosen };
+    if (byLen.error) byLen = null;
   }
-  if (byLen?.error){
-    // If length choice fails, fall back to chest choice.
-    byLen = { chosen: byChest.chosen, alt: byChest.alt };
+
+  if (!byLen){
+    byLen = { chosen: byChest.alt || neighborInSorted(byChest.sorted, byChest.chosen.idx, +1) || neighborInSorted(byChest.sorted, byChest.chosen.idx, -1), alt: null, sorted: byChest.sorted };
   }
 
   // Decide primary & runner-up based on toggle
@@ -763,6 +887,8 @@ function recommendTopsMulti(rows){
 function recommendShoesMulti(rows){
   const foot = toNumber(els.footLen.value);
   if (!Number.isFinite(foot)) return { error: "need_input" };
+  const [minF, maxF] = getRange("foot");
+  if (!inRange(foot, minF, maxF)) return { error: "invalid_input" };
 
   const addBase = allowanceShoe();
   const width = els.footWidth?.value || "standard";
@@ -987,6 +1113,14 @@ function recommendTops(rows){
     els.labelFitTop.textContent = tt.labelFitTop;
     els.hintFitTop.textContent = tt.hintFitTop;
 
+    // "measure your garment" inputs
+    if (els.garmentSummary) els.garmentSummary.textContent = tt.garmentSummary;
+    if (els.garmentNote) els.garmentNote.textContent = tt.garmentNote;
+    if (els.labelGarmentChest) els.labelGarmentChest.textContent = tt.labelGarmentChest;
+    if (els.hintGarmentChest) els.hintGarmentChest.textContent = tt.hintGarmentChest;
+    if (els.labelGarmentLength) els.labelGarmentLength.textContent = tt.labelGarmentLength;
+    if (els.hintGarmentLength) els.hintGarmentLength.textContent = tt.hintGarmentLength;
+
 
     // update fit preference option labels (FitTop / FitShoe)
     if (els.fitTop){
@@ -1182,6 +1316,8 @@ function recommendTops(rows){
       els.errorMsg.textContent = (state.lang === "jp")
         ? "必要な数値が未入力です。入力欄を確認してください。"
         : "Required measurement is missing. Please check the inputs.";
+    } else if (kind === "invalid_input"){
+      els.errorMsg.textContent = tt.invalidInput;
     } else {
       els.errorMsg.textContent = tt.resultTitleNotFound;
     }
@@ -1569,6 +1705,8 @@ async function runCalc(opts = {}){
 
     els.btnReset.addEventListener("click", () => {
       els.nudeChest.value = "";
+      if (els.garmentChest) els.garmentChest.value = "";
+      if (els.garmentLength) els.garmentLength.value = "";
       els.footLen.value = "";
       els.result.hidden = true;
       els.errorBox.hidden = true;
