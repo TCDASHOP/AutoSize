@@ -348,8 +348,10 @@
     productKey: products[0].key,
     tableRows: [],
     tableCols: [],
+    tableMode: "product", // product | body
     lastMatchIndex: null,
     lastAltMatchIndex: null,
+    lastRecommendedSizeVal: null,
     topPriority: "chest", // chest | length
     lastEstimatedChestCm: null,
   };
@@ -586,9 +588,12 @@ function pickCell(row, candidates){
 }
 
 const SIZE_KEYS   = ["Size","size","SIZE","サイズ"];
-const CHEST_KEYS  = ["Chest (flat)","Chest (Flat)","1/2 Chest","1/2 Chest Width","1/2胸幅","胸幅"];
-const LENGTH_KEYS = ["Length","length","長さ","着丈"];
+const CHEST_KEYS  = ["Chest (flat)","Chest (Flat)","1/2 Chest","1/2 Chest Width","1/2胸幅","胸幅","Chest width (flat)","Chest Width (flat)","身幅（平置き）","身幅"];
+const LENGTH_KEYS = ["Length","length","長さ","着丈","Body length","Body Length","丈"];
 const SLEEVE_KEYS = ["Sleeve length","Sleeve Length","sleeve length","袖の長さ","袖丈"];
+
+const FOOTLEN_KEYS = ["Foot length","Foot Length","leg length","Leg length","足の長さ","足長"];
+const OUTSOLE_KEYS = ["Outsole length","Outsole Length","outsole length","アウトソールの長さ","アウトソール長"];
 
 function chooseByChest(rows, targetHalf){
   const sorted = rows.map((r, idx) => ({
@@ -770,7 +775,7 @@ function recommendShoesMulti(rows){
   const target = foot + add;
 
   const candidates = rows.map((r, idx) => {
-    const fl = parseMixedNumber(r["Foot length"]);
+    const fl = parseMixedNumber(pickCell(r, FOOTLEN_KEYS));
     return { idx, fl, row: r };
   }).filter(x => Number.isFinite(x.fl)).sort((a,b)=>a.fl-b.fl);
 
@@ -909,7 +914,7 @@ function recommendTops(rows){
     const target = foot + add;
 
     const candidates = rows.map((r, idx) => {
-      const fl = parseMixedNumber(r["Foot length"]);
+      const fl = parseMixedNumber(pickCell(r, FOOTLEN_KEYS));
       return { idx, fl, row: r };
     }).filter(x => Number.isFinite(x.fl)).sort((a,b)=>a.fl-b.fl);
 
@@ -944,10 +949,10 @@ function recommendTops(rows){
     let line2 = "";
     if (state.unit === "cm"){
       line2 = (state.lang === "jp")
-        ? `おすすめ：サイズ ${pickCell(row, KEYS_SIZE)}（足長 ${row["Foot length"]} / アウトソール ${row["Outsole length"]}）`
-        : `Recommended: size ${pickCell(row, KEYS_SIZE)} (foot ${row["Foot length"]} / outsole ${row["Outsole length"]})`;
+        ? `おすすめ：サイズ ${pickCell(row, KEYS_SIZE)}（足長 ${pickCell(row, FOOTLEN_KEYS)} / アウトソール ${pickCell(row, OUTSOLE_KEYS)}）`
+        : `Recommended: size ${pickCell(row, KEYS_SIZE)} (foot ${pickCell(row, FOOTLEN_KEYS)} / outsole ${pickCell(row, OUTSOLE_KEYS)})`;
     } else {
-      line2 = `US ${row["US"]} / UK ${row["UK"]} / EU ${row["EU"]} (foot ${row["Foot length"]}, outsole ${row["Outsole length"]})`;
+      line2 = `US ${row["US"]} / UK ${row["UK"]} / EU ${row["EU"]} (foot ${pickCell(row, FOOTLEN_KEYS)}, outsole ${pickCell(row, OUTSOLE_KEYS)})`;
     }
 
     return [line1, line2].join("\n");
@@ -1081,7 +1086,9 @@ function recommendTops(rows){
       els.nudeChest.placeholder = "e.g., 39.0";
       els.footLen.placeholder = "e.g., 9.5";
     }
-  }
+  
+    window.tcdaUpdateModeButtons?.();
+}
 
   function renderProductDropdown(){
     // build options
@@ -1146,6 +1153,8 @@ function recommendTops(rows){
     state.productKey = key;
     state.lastMatchIndex = null;
     state.lastAltMatchIndex = null;
+    state.lastRecommendedSizeVal = null;
+    state.tableMode = "product";
     state.lastEstimatedChestCm = null;
     clearResultAndError();
     clearHighlight();
@@ -1255,13 +1264,15 @@ function recommendTops(rows){
       ? `測り方ガイド：${p.labelJP.join(" ")}`
       : `How to measure: ${p.labelEN.join(" ")}`;
 
+    window.tcdaUpdateModeButtons?.();
+
     // load table
     await loadTableForCurrent();
   }
 
   async function loadTableForCurrent(){
     const p = getProduct();
-    const url = p.csv[state.unit];
+    const url = (state.tableMode === "body" && p.bodyCsv) ? p.bodyCsv[state.unit] : p.csv[state.unit];
     try{
       const { cols, data } = await loadCsv(url);
       state.tableCols = cols;
@@ -1330,6 +1341,12 @@ function recommendTops(rows){
     if (key === "sleeve length") return "袖丈";
     if (key === "foot length") return "足の長さ";
     if (key === "outsole length") return "アウトソール長";
+    if (key === "chest width (flat)") return "身幅（平置き）";
+    if (key === "body length") return "着丈";
+    if (key === "chest circumference") return "胸囲";
+    if (key === "waist") return "ウエスト";
+    if (key === "hip") return "ヒップ";
+
 
     return raw;
   }
@@ -1402,6 +1419,7 @@ async function runCalc(opts = {}){
     }
 
     showResult(rec.primary.size, rec.alt?.label || "", rec.detail);
+    state.lastRecommendedSizeVal = rec.primary.size;
     state.lastMatchIndex = rec.primary.matchIndex;
     state.lastAltMatchIndex = rec.alt?.matchIndex ?? null;
 
@@ -1464,6 +1482,7 @@ async function runCalc(opts = {}){
     }
 
     showResult(rec.primary.size, rec.alt?.label || "", rec.detail);
+    state.lastRecommendedSizeVal = rec.primary.size;
     state.lastMatchIndex = rec.primary.matchIndex;
     state.lastAltMatchIndex = rec.alt?.matchIndex ?? null;
 
@@ -1615,7 +1634,70 @@ async function runCalc(opts = {}){
     // re-render on fit change (optional instant feedback)
     els.fitTop.addEventListener("change", () => { clearResultAndError(); clearHighlight(); });
     els.fitShoe.addEventListener("change", () => { clearResultAndError(); clearHighlight(); });
-  }
+  
+    // NEW: table mode toggle (Product measurements / Body measurements)
+    const modeWrap = document.createElement("div");
+    modeWrap.id = "tableModeToggle";
+    modeWrap.style.display = "flex";
+    modeWrap.style.gap = "8px";
+    modeWrap.style.marginTop = "8px";
+
+    const btnProd = document.createElement("button");
+    btnProd.type = "button";
+    btnProd.id = "btnModeProduct";
+    btnProd.style.padding = "6px 10px";
+    btnProd.style.borderRadius = "10px";
+
+    const btnBody = document.createElement("button");
+    btnBody.type = "button";
+    btnBody.id = "btnModeBody";
+    btnBody.style.padding = "6px 10px";
+    btnBody.style.borderRadius = "10px";
+
+    modeWrap.appendChild(btnProd);
+    modeWrap.appendChild(btnBody);
+
+    // insert under table title
+    if (els.tableTitle && !document.getElementById("tableModeToggle")){
+      els.tableTitle.appendChild(modeWrap);
+    }
+
+    function updateModeButtons(){
+      const p = getProduct();
+      const hasBody = !!(p && p.bodyCsv);
+      modeWrap.style.display = hasBody ? "flex" : "none";
+
+      btnProd.textContent = (state.lang === "jp") ? "製品寸法" : "Product measurements";
+      btnBody.textContent = (state.lang === "jp") ? "身体寸法" : "Body measurements";
+
+      btnProd.setAttribute("aria-selected", String(state.tableMode === "product"));
+      btnBody.setAttribute("aria-selected", String(state.tableMode === "body"));
+    }
+    window.tcdaUpdateModeButtons = updateModeButtons;
+
+    btnProd.addEventListener("click", async () => {
+      state.tableMode = "product";
+      updateModeButtons();
+      await loadTableForCurrent();
+      clearHighlight();
+      if (state.lastMatchIndex != null) highlightRow(state.lastMatchIndex, "highlight");
+      if (state.lastAltMatchIndex != null) highlightRow(state.lastAltMatchIndex, "highlightAlt");
+    });
+
+    btnBody.addEventListener("click", async () => {
+      state.tableMode = "body";
+      updateModeButtons();
+      await loadTableForCurrent();
+      clearHighlight();
+      // re-highlight by size label when switching tables (tops/hoodies)
+      const want = String(state.lastRecommendedSizeVal ?? "").trim();
+      if (want){
+        const idx = state.tableRows.findIndex(r => String(pickCell(r, SIZE_KEYS)).trim() === want);
+        if (idx >= 0) highlightRow(idx, "highlight");
+      }
+    });
+
+}
 
   // ---------- init ----------
   async function init(){
