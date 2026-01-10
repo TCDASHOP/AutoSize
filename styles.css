@@ -55,6 +55,13 @@ a:hover{ text-decoration:underline; }
   align-items:center;
 }
 
+/* Unit toggle shares the same styling as language toggle */
+.unitToggle{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
 .wrap{
   width:min(980px, calc(100% - 24px));
   margin: 18px auto 28px;

@@ -72,6 +72,11 @@
     hintFitShoe: document.getElementById("hintFitShoe"),
     shoesNote: document.getElementById("shoesNote"),
 
+    // NEW: shoes foot side (longer foot)
+    labelFootSide: document.getElementById("labelFootSide"),
+    footSide: document.getElementById("footSide"),
+    hintFootSide: document.getElementById("hintFootSide"),
+
     // NEW: shoes foot width
     labelFootWidth: document.getElementById("labelFootWidth"),
     footWidth: document.getElementById("footWidth"),
@@ -106,6 +111,10 @@
     tableHeadRow: document.getElementById("tableHeadRow"),
     tableBody: document.getElementById("tableBody"),
     tableNote: document.getElementById("tableNote"),
+
+    // NEW: unit toggle buttons
+    btnUnitCM: document.getElementById("btnUnitCM"),
+    btnUnitIN: document.getElementById("btnUnitIN"),
   };
 
   const i18n = {
@@ -117,18 +126,19 @@
       productHintTops: "トップスは「ヌード胸囲」を基準におすすめします。",
       productHintShoes: "シューズは「足長（かかと〜一番長い指）」を基準におすすめします。",
 
-      labelNudeChest: "ヌード胸囲（cm）",
+      // Measurement labels (unit appended dynamically)
+      labelNudeChest: "ヌード胸囲",
       hintNudeChest: "分からない場合は下の「推定入力」を使えます（自動で上書きしません）。",
       labelFitTop: "好み（フィット感）",
-      hintFitTop: "標準：+10cm / ぴったり：+6cm / ゆったり：+14cm（目安）",
+      // hintFitTop computed dynamically based on unit and language
       labelTopPriority: "優先",
       priChest: "胸囲優先",
       priLength: "着丈優先",
       hintTopPriority: "同じ胸囲でも、丈（着丈）の好みで満足度が割れます。",
 
       estimateSummary: "ヌード寸法が分からない場合（推定入力）",
-      labelHeight: "身長（cm）",
-      labelWeight: "体重（kg）",
+      labelHeight: "身長",
+      labelWeight: "体重",
       labelSex: "性別",
       female: "女性",
       male: "男性",
@@ -138,16 +148,34 @@
       setEstimated: "推定値をセット",
       msgSetEstimatedDone: "推定値をヌード胸囲にセットしました。",
 
-      labelFootLen: "足長（cm）",
+      labelFootLen: "足長",
       hintFootLen: "左右を測って長い方を入力してください。",
       labelFitShoe: "好み（捨て寸）",
-      hintFitShoe: "標準：+10mm / ぴったり：+7mm / ゆったり：+12mm",
+      // hintFitShoe computed dynamically based on unit
       shoesNote: "アウトソール長は外寸（補助指標）です。足長と同一視しないでください。",
+
+      // Foot side (longer foot)
+      labelFootSide: "長い方",
+      hintFootSide: "",
+      footSideUnknown: "未選択",
+      footSideLeft: "左が長い",
+      footSideRight: "右が長い",
+      footSideSame: "同じ",
+
+      // Foot width
       labelFootWidth: "足幅",
       widthSlim: "細め",
       widthStandard: "標準",
       widthWide: "広め",
       hintFootWidth: "幅広は「次点（大きめ）」寄りに検討してください（厚手ソックスも同様）。",
+
+      // Garment input (measure your garment)
+      garmentSummary: "手持ちの服で入力（おすすめ）",
+      garmentNote: "今ちょうど良い服を平置きで測って入力します。身幅（脇下〜脇下）は必須。着丈は任意。",
+      labelGarmentChest: "身幅（平置き）",
+      hintGarmentChest: "脇下から脇下までの長さ。",
+      labelGarmentLength: "着丈（任意）",
+      hintGarmentLength: "ネックポイントから裾までの長さ。",
 
       calcBtn: "おすすめサイズを計算",
       btnReset: "入力を見直す",
@@ -195,18 +223,19 @@
       productHintTops: "For tops, we recommend based on your nude chest measurement.",
       productHintShoes: "For shoes, we recommend based on your foot length (heel to longest toe).",
 
-      labelNudeChest: "Nude chest (in)",
+      // Measurement labels (unit appended dynamically)
+      labelNudeChest: "Nude chest",
       hintNudeChest: "If you don't know it, you can use the estimator below (it will NOT overwrite automatically).",
       labelFitTop: "Fit preference",
-      hintFitTop: "Standard: +4.0 in / Snug: +2.4 in / Loose: +5.5 in (guide)",
+      // hintFitTop computed dynamically based on unit and language
       labelTopPriority: "Priority",
       priChest: "Chest first",
       priLength: "Length first",
       hintTopPriority: "Even with the same chest, satisfaction often depends on preferred length.",
 
       estimateSummary: "If you don't know your nude measurement (Estimator)",
-      labelHeight: "Height (cm)",
-      labelWeight: "Weight (kg)",
+      labelHeight: "Height",
+      labelWeight: "Weight",
       labelSex: "Sex",
       female: "Female",
       male: "Male",
@@ -216,16 +245,34 @@
       setEstimated: "Set estimated value",
       msgSetEstimatedDone: "Estimated value has been set to Nude chest.",
 
-      labelFootLen: "Foot length (in)",
+      labelFootLen: "Foot length",
       hintFootLen: "Measure both feet and use the longer one.",
       labelFitShoe: "Allowance",
-      hintFitShoe: "Standard: +0.39 in / Snug: +0.28 in / Loose: +0.47 in",
+      // hintFitShoe computed dynamically based on unit
       shoesNote: "Outsole length is an outside measurement (reference only). Do not treat it as foot length.",
+
+      // Foot side (longer foot)
+      labelFootSide: "Longer foot",
+      hintFootSide: "",
+      footSideUnknown: "Not selected",
+      footSideLeft: "Left longer",
+      footSideRight: "Right longer",
+      footSideSame: "Same length",
+
+      // Foot width
       labelFootWidth: "Foot width",
       widthSlim: "Slim",
       widthStandard: "Standard",
       widthWide: "Wide",
       hintFootWidth: "If you have wide feet / thick socks, consider the runner-up (size up).",
+
+      // Garment input (measure your garment)
+      garmentSummary: "Measure your garment (recommended)",
+      garmentNote: "Measure a garment that fits you well laid flat. Chest (flat) is required; length is optional.",
+      labelGarmentChest: "Chest (flat)",
+      hintGarmentChest: "Pit to pit measurement.",
+      labelGarmentLength: "Length (optional)",
+      hintGarmentLength: "Back length from neck to hem.",
 
       calcBtn: "Calculate recommended size",
       btnReset: "Review inputs",
@@ -358,7 +405,7 @@
 
   const state = {
     lang: "jp",         // jp | en
-    unit: "cm",         // cm | inch  (linked to lang)
+    unit: "cm",         // cm | inch (independent of language)
     productKey: products[0].key,
     tableRows: [],
     tableCols: [],
@@ -407,7 +454,7 @@ function pushLog(entry){
 
 async function setLang(next){
   state.lang = next;
-  state.unit = (next === "jp") ? "cm" : "inch";
+  // Do not automatically change unit when switching language. Unit is independent.
   els.btnLangJP.setAttribute("aria-selected", String(next === "jp"));
   els.btnLangEN.setAttribute("aria-selected", String(next === "en"));
   applyI18n();
@@ -419,6 +466,22 @@ async function setLang(next){
     await runCalc({ skipLog: true, skipScroll: true, skipHighlight: true });
   }
 }
+
+  // Set the measurement unit independently from language
+  async function setUnit(next){
+    // next: "cm" | "inch"
+    if (state.unit === next) return;
+    state.unit = next;
+    // update aria-selected on unit buttons
+    els.btnUnitCM?.setAttribute("aria-selected", String(next === "cm"));
+    els.btnUnitIN?.setAttribute("aria-selected", String(next === "inch"));
+    applyI18n();
+    await loadAndRenderCurrentProduct();
+    // If results are showing, re-calculate without logging/highlighting
+    if (!els.result.hidden){
+      await runCalc({ skipLog: true, skipScroll: true, skipHighlight: true });
+    }
+  }
 
   // parse numbers including unicode fractions (e.g., "18 ⅞", "10⅝", "10 1/4", "91/4")
   const fracMap = {
@@ -502,6 +565,14 @@ async function setLang(next){
 
   // ---------- CSV ----------
   async function loadCsv(url){
+    // First, attempt to read from embedded CSV data (when running under file:// where fetch may fail).
+    if (typeof EMBEDDED_CSV_DATA !== 'undefined' && EMBEDDED_CSV_DATA && EMBEDDED_CSV_DATA[url]){
+      // cached in-memory dataset; no parsing needed.
+      const parsed = EMBEDDED_CSV_DATA[url];
+      cache.set(url, parsed);
+      return parsed;
+    }
+
     if (cache.has(url)) return cache.get(url);
 
     const res = await fetch(url, { cache: "no-store" });
@@ -548,6 +619,11 @@ async function setLang(next){
     if (fit === "snug") return (state.unit === "cm") ? 6 : cmToIn(6);
     if (fit === "loose") return (state.unit === "cm") ? 14 : cmToIn(14);
     return (state.unit === "cm") ? 10 : cmToIn(10);
+  }
+
+  // Alias for legacy call sites; easeTop is the canonical implementation
+  function getEaseTop(){
+    return easeTop();
   }
 
   function allowanceShoe(){
@@ -1107,18 +1183,21 @@ function recommendTops(rows){
 
     els.labelProduct.textContent = tt.labelProduct;
 
-    // tops inputs
-    els.labelNudeChest.textContent = tt.labelNudeChest;
+    // Determine the current unit suffix (cm or in) for measurement labels
+    const unitSuffix = (state.unit === "cm") ? "cm" : "in";
+
+    // tops inputs (append unit dynamically)
+    els.labelNudeChest.textContent = `${tt.labelNudeChest} (${unitSuffix})`;
     els.hintNudeChest.textContent = tt.hintNudeChest;
     els.labelFitTop.textContent = tt.labelFitTop;
-    els.hintFitTop.textContent = tt.hintFitTop;
+    // hintFitTop is computed dynamically below
 
     // "measure your garment" inputs
     if (els.garmentSummary) els.garmentSummary.textContent = tt.garmentSummary;
     if (els.garmentNote) els.garmentNote.textContent = tt.garmentNote;
-    if (els.labelGarmentChest) els.labelGarmentChest.textContent = tt.labelGarmentChest;
+    if (els.labelGarmentChest) els.labelGarmentChest.textContent = `${tt.labelGarmentChest} (${unitSuffix})`;
     if (els.hintGarmentChest) els.hintGarmentChest.textContent = tt.hintGarmentChest;
-    if (els.labelGarmentLength) els.labelGarmentLength.textContent = tt.labelGarmentLength;
+    if (els.labelGarmentLength) els.labelGarmentLength.textContent = `${tt.labelGarmentLength} (${unitSuffix})`;
     if (els.hintGarmentLength) els.hintGarmentLength.textContent = tt.hintGarmentLength;
 
 
@@ -1132,21 +1211,26 @@ function recommendTops(rows){
       });
     }
     if (els.fitShoe){
-      const fmt2 = (n) => (Math.round(n * 100) / 100).toFixed(2);
-      const in10 = fmt2(cmToIn(1.0));  // 10mm = 1.0cm
-      const in7  = fmt2(cmToIn(0.7));  // 7mm  = 0.7cm
-      const in12 = fmt2(cmToIn(1.2));  // 12mm = 1.2cm
-
+      // generate allowance labels based on current unit
       const opts = els.fitShoe.querySelectorAll("option");
       opts.forEach(opt => {
-        if (state.lang === "jp"){
-          if (opt.value === "standard") opt.textContent = "標準（+10mm）";
-          if (opt.value === "snug") opt.textContent = "ぴったり（+7mm）";
-          if (opt.value === "loose") opt.textContent = "ゆったり（+12mm）";
+        const baseMm = (opt.value === "snug") ? 7 : (opt.value === "loose") ? 12 : 10;
+        // convert mm to cm or in
+        let displayValue;
+        if (state.unit === "cm"){
+          const cmVal = baseMm / 10;
+          displayValue = `${cmVal.toFixed(1)} cm`;
         } else {
-          if (opt.value === "standard") opt.textContent = `Standard (+${in10} in)`;
-          if (opt.value === "snug") opt.textContent = `Snug (+${in7} in)`;
-          if (opt.value === "loose") opt.textContent = `Loose (+${in12} in)`;
+          const inchVal = cmToIn(baseMm / 10);
+          displayValue = `${(Math.round(inchVal * 100) / 100).toFixed(2)} in`;
+        }
+        if (state.lang === "jp"){
+          // Japanese names for fits
+          const name = (opt.value === "snug") ? "ぴったり" : (opt.value === "loose") ? "ゆったり" : "標準";
+          opt.textContent = `${name}（+${displayValue}）`;
+        } else {
+          const name = (opt.value === "snug") ? "Snug" : (opt.value === "loose") ? "Loose" : "Standard";
+          opt.textContent = `${name} (+${displayValue})`;
         }
       });
     }
@@ -1160,8 +1244,9 @@ function recommendTops(rows){
 
     // estimator
     els.estimateSummary.textContent = tt.estimateSummary;
-    els.labelHeight.textContent = tt.labelHeight;
-    els.labelWeight.textContent = tt.labelWeight;
+    // append fixed units for height and weight (cm/kg)
+    els.labelHeight.textContent = `${tt.labelHeight} (cm)`;
+    els.labelWeight.textContent = `${tt.labelWeight} (kg)`;
     els.labelSex.textContent = tt.labelSex;
     // update sex select labels
     const sexOptions = els.estSex.querySelectorAll("option");
@@ -1176,11 +1261,25 @@ function recommendTops(rows){
     els.btnSetEstimated.textContent = tt.setEstimated;
 
     // shoes inputs
-    els.labelFootLen.textContent = tt.labelFootLen;
+    // append unit dynamically for foot length
+    els.labelFootLen.textContent = `${tt.labelFootLen} (${unitSuffix})`;
     els.hintFootLen.textContent = tt.hintFootLen;
     els.labelFitShoe.textContent = tt.labelFitShoe;
-    els.hintFitShoe.textContent = tt.hintFitShoe;
+    // hintFitShoe computed dynamically below (based on unit)
     els.shoesNote.textContent = tt.shoesNote;
+
+    // foot side (longer foot)
+    if (els.labelFootSide) els.labelFootSide.textContent = tt.labelFootSide;
+    if (els.hintFootSide) els.hintFootSide.textContent = tt.hintFootSide;
+    if (els.footSide){
+      const opts = els.footSide.querySelectorAll('option');
+      opts.forEach(opt => {
+        if (opt.value === 'unknown') opt.textContent = tt.footSideUnknown;
+        if (opt.value === 'left') opt.textContent = tt.footSideLeft;
+        if (opt.value === 'right') opt.textContent = tt.footSideRight;
+        if (opt.value === 'same') opt.textContent = tt.footSideSame;
+      });
+    }
 
     // NEW: shoes width
     if (els.labelFootWidth) els.labelFootWidth.textContent = tt.labelFootWidth;
@@ -1214,13 +1313,50 @@ function recommendTops(rows){
 
     // placeholders update
     if (state.lang === "jp"){
-      els.nudeChest.placeholder = "例：99";
-      els.footLen.placeholder = "例：24.0";
+      els.nudeChest.placeholder = (state.unit === 'cm') ? "例：99" : "例：39.0";
+      els.footLen.placeholder = (state.unit === 'cm') ? "例：24.0" : "例：9.5";
     } else {
-      els.nudeChest.placeholder = "e.g., 39.0";
-      els.footLen.placeholder = "e.g., 9.5";
+      els.nudeChest.placeholder = (state.unit === 'cm') ? "e.g., 99" : "e.g., 39.0";
+      els.footLen.placeholder = (state.unit === 'cm') ? "e.g., 24.0" : "e.g., 9.5";
     }
-  
+
+    // Compute hintFitTop dynamically based on current unit and language
+    if (els.hintFitTop){
+      const labelStandard = (state.lang === 'jp') ? '標準' : 'Standard';
+      const labelSnug = (state.lang === 'jp') ? 'ぴったり' : 'Snug';
+      const labelLoose = (state.lang === 'jp') ? 'ゆったり' : 'Loose';
+      let suffixStr = (state.lang === 'jp') ? '（目安）' : ' (guide)';
+      const valStd = (state.unit === 'cm') ? 10 : cmToIn(10);
+      const valSnug = (state.unit === 'cm') ? 6 : cmToIn(6);
+      const valLoose = (state.unit === 'cm') ? 14 : cmToIn(14);
+      const fmt = (n) => {
+        if (state.unit === 'cm') return `${n.toFixed(0)} cm`;
+        return `${(Math.round(n * 10) / 10).toFixed(1)} in`;
+      };
+      els.hintFitTop.textContent = `${labelStandard}: +${fmt(valStd)} / ${labelSnug}: +${fmt(valSnug)} / ${labelLoose}: +${fmt(valLoose)} ${suffixStr}`;
+    }
+    // Compute hintFitShoe dynamically based on unit
+    if (els.hintFitShoe){
+      const labelStd = (state.lang === 'jp') ? '標準' : 'Standard';
+      const labelSnug = (state.lang === 'jp') ? 'ぴったり' : 'Snug';
+      const labelLoose = (state.lang === 'jp') ? 'ゆったり' : 'Loose';
+      const suffix = (state.lang === 'jp') ? '（目安）' : ' (guide)';
+      // 10mm, 7mm, 12mm
+      const mmValues = { standard: 10, snug: 7, loose: 12 };
+      const fmtVal = (mm) => {
+        if (state.unit === 'cm'){
+          const cmVal = mm / 10;
+          return `${cmVal.toFixed(1)} cm`;
+        }
+        const inchVal = cmToIn(mm / 10);
+        return `${(Math.round(inchVal * 100) / 100).toFixed(2)} in`;
+      };
+      const vStd = fmtVal(mmValues.standard);
+      const vSnug = fmtVal(mmValues.snug);
+      const vLoose = fmtVal(mmValues.loose);
+      els.hintFitShoe.textContent = `${labelStd}: +${vStd} / ${labelSnug}: +${vSnug} / ${labelLoose}: +${vLoose} ${suffix}`;
+    }
+
     window.tcdaUpdateModeButtons?.();
 }
 
@@ -1675,6 +1811,10 @@ async function runCalc(opts = {}){
   function bindEvents(){
     els.btnLangJP.addEventListener("click", () => setLang("jp"));
     els.btnLangEN.addEventListener("click", () => setLang("en"));
+
+    // unit toggle events
+    els.btnUnitCM?.addEventListener("click", () => setUnit("cm"));
+    els.btnUnitIN?.addEventListener("click", () => setUnit("inch"));
 
     // NEW: tops priority toggle
     els.btnPriChest?.addEventListener("click", () => {

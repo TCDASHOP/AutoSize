@@ -15,6 +15,11 @@
 <button aria-selected="true" class="pill" id="btnLangJP" type="button">JP</button>
 <button aria-selected="false" class="pill" id="btnLangEN" type="button">EN</button>
 </div>
+  <!-- Unit toggle (independent from language) -->
+  <div aria-label="Unit" class="unitToggle" role="tablist">
+    <button aria-selected="true" class="pill" id="btnUnitCM" type="button">cm</button>
+    <button aria-selected="false" class="pill" id="btnUnitIN" type="button">inch</button>
+  </div>
 </header>
 <main class="wrap">
 <section class="card">
@@ -199,6 +204,8 @@
 </div>
 </footer>
 <!-- cache-busting: update the version when you deploy changes -->
-<script src="app.js?v=20251221_1"></script>
+    <!-- Load embedded CSV data first. This contains all data tables inlined into JavaScript so the app can run under file:// without fetch failures. -->
+    <script src="embedded_csv.js?v=20260110_1"></script>
+    <script src="app.js?v=20260110_1"></script>
 </body>
 </html>
