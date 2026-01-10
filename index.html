@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="dark light" name="color-scheme"/>
+<title>TCDA Auto Size Guide</title>
+<link href="styles.css" rel="stylesheet"/>
+</head>
+<body>
+<header class="topbar">
+<a class="backlink" href="https://www.tcda.shop/" id="backToShop" rel="noopener">ショップに戻る</a>
+<div aria-label="Language" class="langToggle" role="tablist">
+<button aria-selected="true" class="pill" id="btnLangJP" type="button">JP</button>
+<button aria-selected="false" class="pill" id="btnLangEN" type="button">EN</button>
+</div>
+  <!-- Unit toggle (independent from language) -->
+  <div aria-label="Unit" class="unitToggle" role="tablist">
+    <button aria-selected="true" class="pill" id="btnUnitCM" type="button">cm</button>
+    <button aria-selected="false" class="pill" id="btnUnitIN" type="button">inch</button>
+  </div>
+</header>
+<main class="wrap">
+<section class="card">
+<h1 id="pageTitle">サイズを自動でおすすめ</h1>
+<p class="sub" id="pageSubtitle">商品を選んで、必要な数値だけ入力してください。</p>
+<!-- Product picker -->
+<div class="field">
+<label id="labelProduct">商品</label>
+<!-- Custom dropdown (2-line labels guaranteed) -->
+<div class="select" id="productSelect">
+<button aria-expanded="false" aria-haspopup="listbox" class="selectBtn" id="productButton" type="button">
+<span class="selectBtnText" id="productButtonText"></span>
+<span aria-hidden="true" class="selectChevron">▾</span>
+</button>
+<div class="selectList" hidden="" id="productList" role="listbox" tabindex="-1"></div>
+</div>
+<p class="hint" id="productHint"></p>
+</div>
+<!-- Inputs (tops) -->
+<div class="inputs" hidden="" id="inputsTops">
+<div class="grid2">
+<div class="field">
+<label for="nudeChest" id="labelNudeChest">ヌード胸囲（cm）</label>
+<input autocomplete="off" id="nudeChest" inputmode="decimal" placeholder="例：99"/>
+<p class="hint" id="hintNudeChest"></p>
+</div>
+<div class="field" id="topPriorityBox">
+<label id="labelTopPriority">優先</label>
+<div aria-label="Priority" class="actions" id="topPriorityActions" role="tablist">
+<button aria-selected="true" class="pill" id="btnPriChest" type="button">胸囲優先</button>
+<button aria-selected="false" class="pill" id="btnPriLength" type="button">着丈優先</button>
+</div>
+<p class="hint" id="hintTopPriority"></p>
+</div>
+<div class="field">
+<label for="fitTop" id="labelFitTop">好み（フィット感）</label>
+<select id="fitTop">
+<option selected="" value="standard">標準</option>
+<option value="snug">ぴったり</option>
+<option value="loose">ゆったり</option>
+</select>
+<p class="hint" id="hintFitTop"></p>
+</div>
+</div>
+<details class="est" id="garmentBox"><summary id="garmentSummary">手持ちの服で入力（おすすめ）</summary><p class="hint" id="garmentNote">今ちょうど良い服を平置きで測って入力します。身幅（脇下〜脇下）は必須。着丈は任意。</p><div class="grid2"><div class="field"><label for="garmentChest" id="labelGarmentChest">身幅（平置き・cm）</label><input autocomplete="off" id="garmentChest" inputmode="decimal" placeholder="例：56"/><p class="hint" id="hintGarmentChest"></p></div><div class="field"><label for="garmentLength" id="labelGarmentLength">着丈（任意・cm）</label><input autocomplete="off" id="garmentLength" inputmode="decimal" placeholder="例：70"/><p class="hint" id="hintGarmentLength"></p></div></div></details><details class="est" id="estimateBox">
+<summary id="estimateSummary">ヌード寸法が分からない場合（推定入力）</summary>
+<div class="grid3">
+<div class="field">
+<label for="estHeight" id="labelHeight">身長（cm）</label>
+<input autocomplete="off" id="estHeight" inputmode="decimal" placeholder="例：170"/>
+</div>
+<div class="field">
+<label for="estWeight" id="labelWeight">体重（kg）</label>
+<input autocomplete="off" id="estWeight" inputmode="decimal" placeholder="例：60"/>
+</div>
+<div class="field">
+<label for="estSex" id="labelSex">性別</label>
+<select id="estSex">
+<option selected="" value="female">女性</option>
+<option value="male">男性</option>
+</select>
+</div>
+</div>
+<div class="row">
+<div class="field">
+<label for="estBmi" id="labelBMI">BMI（任意）</label>
+<input autocomplete="off" id="estBmi" inputmode="decimal" placeholder="空欄なら自動計算"/>
+<p class="hint" id="hintBMI"></p>
+</div>
+<div class="actions">
+<button class="pill secondary" hidden="" id="btnSetEstimated" type="button">推定値をセット</button>
+</div>
+</div>
+<p class="note" id="estimateNote"></p>
+</details>
+</div>
+<!-- Inputs (shoes) -->
+<div class="inputs" hidden="" id="inputsShoes">
+<div class="grid2">
+<div class="field">
+<label for="footLen" id="labelFootLen">足長（cm）</label>
+<input autocomplete="off" id="footLen" inputmode="decimal" placeholder="例：24.0"/>
+<p class="hint" id="hintFootLen"></p>
+</div>
+<div class="field">
+<label for="footSide" id="labelFootSide">長い方</label>
+<select id="footSide">
+<option selected="" value="unknown">未選択</option>
+<option value="left">左が長い</option>
+<option value="right">右が長い</option>
+<option value="same">同じ</option>
+</select>
+<p class="hint" id="hintFootSide"></p>
+</div>
+<div class="field">
+<label for="footWidth" id="labelFootWidth">足幅</label>
+<select id="footWidth">
+<option value="slim">細め</option>
+<option selected="" value="standard">標準</option>
+<option value="wide">広め</option>
+</select>
+<p class="hint" id="hintFootWidth"></p>
+</div>
+<div class="field">
+<label for="fitShoe" id="labelFitShoe">好み（捨て寸）</label>
+<select id="fitShoe">
+<option selected="" value="standard">標準（+10mm）</option>
+<option value="snug">ぴったり（+7mm）</option>
+<option value="loose">ゆったり（+12mm）</option>
+</select>
+<p class="hint" id="hintFitShoe"></p>
+</div>
+</div>
+<p class="note" id="shoesNote"></p>
+</div>
+<div class="actions mainActions">
+<button class="primary" id="calcBtn" type="button">おすすめサイズを計算</button>
+<button class="pill" id="btnReset" type="button">入力を見直す</button>
+<button class="pill pill-secondary" id="btnScrollTable" type="button">サイズ表で選ぶ</button>
+</div>
+<div aria-label="Log tools" class="actions logActions">
+<button class="pill secondary" id="btnExportLogs" type="button">ログを書き出す</button>
+<button class="pill pill-secondary" id="btnClearLogs" type="button">ログを消す</button>
+<span class="logInfo" id="logInfo"></span>
+</div>
+<!-- Result -->
+<section aria-live="polite" class="result" hidden="" id="result">
+<div class="resultTop">
+<div class="resultTitle" id="resultTitle"></div>
+<div class="resultValueWrap">
+<div class="resultValue" id="resultValue"></div>
+<div class="resultValueAlt" id="resultValueAlt"></div>
+</div>
+</div>
+<div class="resultDetail" id="resultDetail"></div>
+<div class="resultActions">
+<button class="pill" id="btnHighlight" type="button">サイズ表で該当行を見る</button>
+<button class="pill secondary" hidden="" id="btnHighlightAlt" type="button">次点も見る</button>
+</div>
+</section>
+<section class="error" hidden="" id="errorBox">
+<div class="errorMsg" id="errorMsg"></div>
+<div class="actions">
+<button class="pill" id="btnFixInput" type="button">入力を見直す</button>
+<button class="pill pill-secondary" id="btnGoTable" type="button">サイズ表で選ぶ</button>
+</div>
+</section>
+</section>
+<!-- Guide image -->
+<section class="card">
+<h2 id="guideTitle">測り方ガイド</h2>
+<p class="sub" id="guideCaption">※ 画像は商品に応じて切り替わります / Image changes by product.</p>
+<div class="guideBox">
+<img alt="" id="guideImg" loading="lazy"/>
+</div>
+<div class="notes" id="notesBox">
+<h3 id="notesTitle">選ぶときの注意事項</h3>
+<ul id="notesList"></ul>
+</div>
+</section>
+<!-- Table -->
+<section class="card" id="tableCard">
+<div class="tableHead">
+<h2 id="tableTitle">サイズ表</h2>
+<div class="tableMeta">
+<span id="tableUnit"></span>
+</div>
+</div>
+<div class="tableWrap">
+<table id="sizeTable">
+<thead id="tableHeadRow"></thead>
+<tbody id="tableBody"></tbody>
+</table>
+</div>
+<p class="hint" id="tableNote"></p>
+</section>
+</main>
+<footer class="footer">
+<div class="footerInner">
+<img alt="Transcend Color Digital Apparel" class="logo" id="footerLogo" src="assets/logo.png"/>
+<div class="copy">© 2026 Transcend Color Digital Apparel</div>
+</div>
+</footer>
+<!-- cache-busting: update the version when you deploy changes -->
+    <!-- Load embedded CSV data first. This contains all data tables inlined into JavaScript so the app can run under file:// without fetch failures. -->
+    <script src="embedded_csv.js?v=20260110_1"></script>
+    <script src="app.js?v=20260110_1"></script>
+</body>
+</html>
