@@ -197,6 +197,9 @@
       btnFixInput: "入力を見直す",
       btnGoTable: "サイズ表で選ぶ",
 
+      // Boundary guidance shown when both primary and runner-up sizes are available
+      boundaryRule: "境界付近の場合は大きめをおすすめします。",
+
       // notes per category
       notesTops: [
         "最短で失敗を減らす：手持ちの「いちばん好きな服」を平置きで測り、サイズ表の近い数値を選ぶ。",
@@ -293,6 +296,9 @@
       btnHighlight: "Show the matching row",
       btnFixInput: "Review inputs",
       btnGoTable: "Choose from size chart",
+
+      // Boundary guidance shown when both primary and runner-up sizes are available
+      boundaryRule: "If between sizes, consider sizing up.",
 
       notesTops: [
         "Fastest way to reduce mistakes: measure your favorite item (flat) and pick the closest numbers in the chart.",
@@ -702,17 +708,9 @@ function pickCell(row, candidates){
 }
 
 const SIZE_KEYS   = ["Size","size","SIZE","サイズ"];
-
-// -----------------------------------------------------------------------------
-// NOTE:
-// The shoe recommendation logic references `KEYS_SIZE` when looking up the
-// primary size cell in a row. The original implementation only defined
-// `SIZE_KEYS`, which caused a `ReferenceError` because `KEYS_SIZE` was never
-// declared. To preserve backwards compatibility and avoid a runtime exception,
-// define `KEYS_SIZE` as an alias of `SIZE_KEYS` here. Without this alias the
-// slip‑on shoes logic would fail to produce any recommendation.
-// -----------------------------------------------------------------------------
-const KEYS_SIZE = SIZE_KEYS;
+// For backward compatibility: some functions referenced KEYS_SIZE instead of SIZE_KEYS.
+// Define KEYS_SIZE as an alias to SIZE_KEYS so that both references point to the same array.
+const KEYS_SIZE    = SIZE_KEYS;
 const CHEST_KEYS  = ["Chest (flat)","Chest (Flat)","1/2 Chest","1/2 Chest Width","1/2胸幅","胸幅","Chest width (flat)","Chest Width (flat)","身幅（平置き）","身幅"];
 const LENGTH_KEYS = ["Length","length","長さ","着丈","Body length","Body Length","丈"];
 const SLEEVE_KEYS = ["Sleeve length","Sleeve Length","sleeve length","袖の長さ","袖丈"];
@@ -1480,7 +1478,12 @@ function recommendTops(rows){
       els.resultValueAlt.textContent = altText || "";
       els.resultValueAlt.hidden = !altText;
     }
-    els.resultDetail.textContent = detail;
+    // Append boundary guidance when a runner-up size is provided.
+    let detailWithRule = detail;
+    if (altText) {
+      detailWithRule = detail + "\n" + tt.boundaryRule;
+    }
+    els.resultDetail.textContent = detailWithRule;
   }
 
   function renderNotes(){
