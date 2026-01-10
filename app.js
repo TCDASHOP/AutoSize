@@ -702,6 +702,17 @@ function pickCell(row, candidates){
 }
 
 const SIZE_KEYS   = ["Size","size","SIZE","サイズ"];
+
+// -----------------------------------------------------------------------------
+// NOTE:
+// The shoe recommendation logic references `KEYS_SIZE` when looking up the
+// primary size cell in a row. The original implementation only defined
+// `SIZE_KEYS`, which caused a `ReferenceError` because `KEYS_SIZE` was never
+// declared. To preserve backwards compatibility and avoid a runtime exception,
+// define `KEYS_SIZE` as an alias of `SIZE_KEYS` here. Without this alias the
+// slip‑on shoes logic would fail to produce any recommendation.
+// -----------------------------------------------------------------------------
+const KEYS_SIZE = SIZE_KEYS;
 const CHEST_KEYS  = ["Chest (flat)","Chest (Flat)","1/2 Chest","1/2 Chest Width","1/2胸幅","胸幅","Chest width (flat)","Chest Width (flat)","身幅（平置き）","身幅"];
 const LENGTH_KEYS = ["Length","length","長さ","着丈","Body length","Body Length","丈"];
 const SLEEVE_KEYS = ["Sleeve length","Sleeve Length","sleeve length","袖の長さ","袖丈"];
